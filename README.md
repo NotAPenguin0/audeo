@@ -1,2 +1,3 @@
-# audeo
-Modern C++ 3D audio library
+# Noot Noot
+
+Noot Noot is a library for playing 3D sounds for modern C++.
