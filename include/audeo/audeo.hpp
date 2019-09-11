@@ -5,5 +5,6 @@
 
 #include "exception.hpp"
 #include "SoundEngine.hpp"
+#include "SoundSource.hpp"
 
 #endif

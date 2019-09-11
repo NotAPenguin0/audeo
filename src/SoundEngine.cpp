@@ -10,17 +10,17 @@
 
 namespace audeo {
 
-static int to_mix_format(SoundEngine::AudioFormat format) {
+static int to_mix_format(AudioFormat format) {
     switch (format) {
-        case SoundEngine::AudioFormat::U8: return AUDIO_U8;
-        case SoundEngine::AudioFormat::S8: return AUDIO_S8;
-        case SoundEngine::AudioFormat::U16LSB: return AUDIO_U16LSB;
-        case SoundEngine::AudioFormat::S16LSB: return AUDIO_S16LSB;
-        case SoundEngine::AudioFormat::U16MSB: return AUDIO_U16MSB;
-        case SoundEngine::AudioFormat::S16MSB: return AUDIO_S16MSB;
-        case SoundEngine::AudioFormat::U16SYS: return AUDIO_U16SYS;
-        case SoundEngine::AudioFormat::S16SYS: return AUDIO_S16SYS;
-        case SoundEngine::AudioFormat::Default: return MIX_DEFAULT_FORMAT;
+        case AudioFormat::U8: return AUDIO_U8;
+        case AudioFormat::S8: return AUDIO_S8;
+        case AudioFormat::U16LSB: return AUDIO_U16LSB;
+        case AudioFormat::S16LSB: return AUDIO_S16LSB;
+        case AudioFormat::U16MSB: return AUDIO_U16MSB;
+        case AudioFormat::S16MSB: return AUDIO_S16MSB;
+        case AudioFormat::U16SYS: return AUDIO_U16SYS;
+        case AudioFormat::S16SYS: return AUDIO_S16SYS;
+        case AudioFormat::Default: return MIX_DEFAULT_FORMAT;
     }
     return MIX_DEFAULT_FORMAT;
 }
@@ -65,5 +65,21 @@ std::string SoundEngine::get_audio_driver_name() const {
 }
 
 bool SoundEngine::is_playing_music() const { return Mix_PlayingMusic(); }
+
+void SoundEngine::play_music(SoundSource& source,
+                             int loop_count,
+                             int fade_in_ms /* = 0 */) {
+
+    if (!source.is_music()) {
+        AUDEO_THROW(audeo::exception(
+            "Audeo: Tried to play a chunk sound as music sound"));
+    }
+
+    if (fade_in_ms) {
+        Mix_FadeInMusic(source.data.music, loop_count, fade_in_ms);
+    } else {
+        Mix_PlayMusic(source.data.music, loop_count);
+    }
+}
 
 } // namespace audeo
