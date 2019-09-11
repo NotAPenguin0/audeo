@@ -1,0 +1,7 @@
+set(AUDEO_HEADER_FILES
+	${AUDEO_HEADER_FILES}
+	"${CMAKE_CURRENT_SOURCE_DIR}/audeo/audeo.hpp"
+	"${CMAKE_CURRENT_SOURCE_DIR}/audeo/exception.hpp"
+	"${CMAKE_CURRENT_SOURCE_DIR}/audeo/SoundEngine.hpp"
+	PARENT_SCOPE
+)

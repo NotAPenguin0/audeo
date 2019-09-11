@@ -1,8 +1,17 @@
-#define SDL_MAIN_HANDLED
-#include <SDL.h>
+#include "audeo/audeo.hpp"
 #include <iostream>
+#include <string>
 
 int main() {
-	SDL_Init(SDL_INIT_AUDIO);
+    try {
+
+        audeo::SoundEngine::InitInfo info;
+        info.output_channels = audeo::SoundEngine::OutputChannelCount::Stereo;
+        audeo::SoundEngine engine(info);
+
+		while (engine.is_playing_music()) {}
+
+    } catch (audeo::exception const& e) { std::cout << e.what(); }
+
     return 0;
 }

@@ -52,12 +52,15 @@ source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}" FILES ${AUDEO_HEADER_FILES} ${AU
 
 target_include_directories(audeo
 	PUBLIC ${AUDEO_PUBLIC_INCLUDE_DIRECTORIES}
+	"${CMAKE_CURRENT_SOURCE_DIR}/include"
 	"${CMAKE_CURRENT_SOURCE_DIR}/dependencies/sdl/include"
+	"${CMAKE_CURRENT_SOURCE_DIR}/dependencies/sdl_mixer/include"
 )
 
 set(LINK_LIBRARIES 
 	${CMAKE_CURRENT_SOURCE_DIR}/dependencies/sdl/bin/SDL2.lib
 	${CMAKE_CURRENT_SOURCE_DIR}/dependencies/sdl/bin/SDL2main.lib
+	${CMAKE_CURRENT_SOURCE_DIR}/dependencies/sdl_mixer/lib/x64/SDL2_mixer.lib
 )
 
 target_link_libraries(audeo ${LINK_LIBRARIES})
