@@ -54,6 +54,6 @@ target_include_directories(audeo
 	PUBLIC ${AUDEO_PUBLIC_INCLUDE_DIRECTORIES}
 )
 
-set(LINK_LIBRARIES "")
+set(LINK_LIBRARIES SDL2)
 
 target_link_libraries(audeo ${LINK_LIBRARIES})
