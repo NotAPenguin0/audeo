@@ -66,15 +66,20 @@ std::string SoundEngine::get_audio_driver_name() const {
 
 bool SoundEngine::is_playing_music() const { return Mix_PlayingMusic(); }
 
-void SoundEngine::play_music(SoundSource& source,
+void SoundEngine::play_sound(SoundSource& source,
                              int loop_count,
                              int fade_in_ms /* = 0 */) {
 
-    if (!source.is_music()) {
-        AUDEO_THROW(audeo::exception(
-            "Audeo: Tried to play a chunk sound as music sound"));
-    }
+    if (source.is_music()) {
+        play_music(source, loop_count, fade_in_ms);
+    } else {
+		// play_effect(source, loop_count, fade_in_ms);
+	}
+}
 
+void SoundEngine::play_music(SoundSource& source,
+                             int loop_count,
+                             int fade_in_ms) {
     if (fade_in_ms) {
         Mix_FadeInMusic(source.data.music, loop_count, fade_in_ms);
     } else {

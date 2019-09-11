@@ -33,7 +33,6 @@ enum class AudioFormat {
 // Pass this value to in a loop_count parameter to make it loop forever
 static constexpr int loop_forever = -1;
 
-
 // The main class for audeo. You should only ever need one instance of this
 // class.
 class SoundEngine {
@@ -66,7 +65,10 @@ public:
     // Play a music source. loop_count is the amount of times we loop the music.
     // fade_in_ms is the amount of ms to fade in. Leave this at 0 (the default
     // value) to play the music without fading in.
-    void play_music(SoundSource& source, int loop_count, int fade_in_ms = 0);
+    void play_sound(SoundSource& source, int loop_count, int fade_in_ms = 0);
+
+private:
+	void play_music(SoundSource& source, int loop_count, int fade_in_ms);
 };
 
 } // namespace audeo
