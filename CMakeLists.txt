@@ -11,7 +11,7 @@ set(CMAKE_CXX_STANDARD 17)
 
 set(AUDEO_COMPILE_FLAGS "")
 
-# Release build by default
+# build Release by default
 if (NOT CMAKE_BUILD_TYPE)
 	set(CMAKE_BUILD_TYPE "Release")
 	message(STATUS "Audeo: Build type not specified: Using Release by default.")
@@ -52,8 +52,12 @@ source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}" FILES ${AUDEO_HEADER_FILES} ${AU
 
 target_include_directories(audeo
 	PUBLIC ${AUDEO_PUBLIC_INCLUDE_DIRECTORIES}
+	"${CMAKE_CURRENT_SOURCE_DIR}/dependencies/sdl/include"
 )
 
-set(LINK_LIBRARIES SDL2)
+set(LINK_LIBRARIES 
+	${CMAKE_CURRENT_SOURCE_DIR}/dependencies/sdl/bin/SDL2.lib
+	${CMAKE_CURRENT_SOURCE_DIR}/dependencies/sdl/bin/SDL2main.lib
+)
 
 target_link_libraries(audeo ${LINK_LIBRARIES})
