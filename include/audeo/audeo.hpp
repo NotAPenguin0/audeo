@@ -3,8 +3,9 @@
 
 // Main header for audeo library. Includes main audeo functionality
 
-#include "exception.hpp"
+#include "Sound.hpp"
 #include "SoundEngine.hpp"
 #include "SoundSource.hpp"
+#include "exception.hpp"
 
 #endif

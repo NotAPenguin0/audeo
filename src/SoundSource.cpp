@@ -32,7 +32,7 @@ void SoundSource::load(std::string_view path, AudioType type) {
             data_is_music = true;
             data.music = Mix_LoadMUS(path.data());
             break;
-        case AudioType::Chunk: data.chunk = Mix_LoadWAV(path.data()); break;
+        case AudioType::Effect: data.chunk = Mix_LoadWAV(path.data()); break;
     }
 
     // Check for errors
@@ -48,6 +48,13 @@ void SoundSource::load(std::string_view path, AudioType type) {
 }
 
 bool SoundSource::is_music() const { return data_is_music; }
+
+void SoundSource::set_default_volume(float volume) {
+    if (volume > 1) volume = 1;
+    if (volume < 0) volume = 0;
+
+	default_params.volume = volume;
+}
 
 void SoundSource::free_if_not_null() {
     // Since both union elements are pointers it does not matter which one we
