@@ -62,9 +62,9 @@ public:
     // Return true if the engine is playing a music track
     bool is_playing_music() const;
 
-    // Play a music source. loop_count is the amount of times we loop the music.
+    // Play a sound source. loop_count is the amount of times we loop the sound.
     // fade_in_ms is the amount of ms to fade in. Leave this at 0 (the default
-    // value) to play the music without fading in.
+    // value) to play the sound without fading in.
     void play_sound(SoundSource& source, int loop_count, int fade_in_ms = 0);
 
 private:

@@ -6,13 +6,14 @@
 #    define AUDEO_CATCH(except) catch (except)
 #    define AUDEO_TRY try
 #    include <stdexcept>
-#include <string_view>
+#	 include <string_view>
 
 namespace audeo {
 
-class exception : public std::exception {
-    using std::exception::exception;
-    inline exception(std::string_view message) : exception(message.data()) {}
+class exception : public std::runtime_error {
+public:
+    using std::runtime_error::runtime_error;
+    inline exception(std::string_view message) : std::runtime_error(message.data()) {}
 };
 
 } // namespace audeo
