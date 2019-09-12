@@ -10,9 +10,9 @@
 
 namespace audeo {
 
-class exception : public std::exception {
-    using std::exception::exception;
-    inline exception(std::string_view message) : exception(message.data()) {}
+class exception : public std::runtime_error {
+public:
+    inline exception(std::string_view message) : std::runtime_error(message.data()) {}
 };
 
 } // namespace audeo
