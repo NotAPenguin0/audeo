@@ -5,5 +5,6 @@ set(AUDEO_HEADER_FILES
 	"${CMAKE_CURRENT_SOURCE_DIR}/audeo/Sound.hpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/audeo/SoundEngine.hpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/audeo/SoundSource.hpp"
+	"${CMAKE_CURRENT_SOURCE_DIR}/audeo/vec3.hpp"
 	PARENT_SCOPE
 )

@@ -4,6 +4,7 @@
 #include "Sound.hpp"
 #include "SoundSource.hpp"
 #include "exception.hpp"
+#include "vec3.hpp"
 
 #include <cstddef>
 #include <unordered_map>
@@ -46,6 +47,9 @@ public:
         SoundSource* source;
         // The channel this sound is playing on. -1 for music
         int channel;
+        // The current position of the sound. Only used when the sound is an
+        // effect
+        vec3f position;
     };
 
     // Initialization data for the sound engine.
@@ -103,7 +107,13 @@ public:
     // valid, this function will return -1
     float get_volume(Sound sound) const;
 
-    // Functions to affect currently playing sounds
+    // Returns the position of a playing sound. For music, this position will
+    // always be (0, 0, 0). For an invalid sound, this function will also
+    // return (0, 0, 0)
+    vec3f get_position(Sound sound) const;
+
+    // Functions to affect currently playing sounds. Note that all these
+    // functions return a bool indicating success or failure.
 
     // Pauses a currently playing sound. Calling this on a paused sound has no
     // effect
@@ -113,18 +123,37 @@ public:
     // effect
     bool resume_sound(Sound sound);
 
+    // Completely stops a sound. After this call, the sound handle will become
+    // invalid, as the sound will no longer be playing
+    bool stop_sound(Sound sound, int fade_out_ms = 0);
+
     // Set volume for a sound. This volume value is an value between 0 and 1,
     // where 0 means complete silence, and 1 means max volume. Any value outside
     // this range will be clamped to be inside it
     bool set_volume(Sound sound, float volume);
+
+    // Set the 3D position of the sound
+    bool set_position(Sound sound, vec3f position);
+    bool set_position(Sound sound, float x, float y, float z);
+
+    // Functionality to control positional audio.
+
+    // Sets the audio listener position to specified position
+    void set_listener_position(vec3f new_position);
+    void set_listener_position(float new_x, float new_y, float new_z);
 
 private:
     Sound play_music(SoundSource& source, int loop_count, int fade_in_ms);
     std::pair<Sound, int>
     play_effect(SoundSource& source, int loop_count, int fade_in_ms);
 
+    void set_effect_position(int channel, vec3f position);
+
     std::unordered_map<Sound, SoundData> active_sounds;
     std::unordered_map<int, Sound> channel_map;
+
+    // Default constructed to (0, 0, 0)
+    vec3f listener_pos;
 };
 
 } // namespace audeo

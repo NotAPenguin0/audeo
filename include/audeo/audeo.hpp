@@ -7,5 +7,6 @@
 #include "SoundEngine.hpp"
 #include "SoundSource.hpp"
 #include "exception.hpp"
+#include "vec3.hpp"
 
 #endif

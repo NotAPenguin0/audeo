@@ -5,6 +5,7 @@
 #include <string_view>
 
 #include "exception.hpp"
+#include "vec3.hpp"
 
 namespace audeo {
 
@@ -36,6 +37,11 @@ public:
     // the range
     void set_default_volume(float volume);
 
+    // Used for 3D spatial audio. This is a position in world space and will be
+    // used together with the listener position to create 3D sounds
+    void set_default_position(vec3f position);
+    void set_default_position(float x, float y, float z);
+
 private:
     void free_if_not_null();
 
@@ -49,8 +55,9 @@ private:
         // volume is a value between 0 and 1, where 0 means silent and 1 means
         // max volume
         float volume = 1.0f;
+        // Default constructed to (0, 0, 0)
+        vec3f position;
     } default_params;
-
 };
 
 } // namespace audeo

@@ -148,6 +148,7 @@ Sound SoundEngine::play_sound(SoundSource& source,
         auto effect_data = play_effect(source, loop_count, fade_in_ms);
         sound = effect_data.first;
         data.channel = effect_data.second;
+        data.position = source.default_params.position;
     }
     // Add the sound to the active sounds list and to the channel map
     active_sounds.try_emplace(sound, data);
@@ -171,6 +172,16 @@ float SoundEngine::get_volume(Sound sound) const {
         return static_cast<float>(Mix_Volume(data.channel, -1)) /
                MIX_MAX_VOLUME;
     }
+}
+
+vec3f SoundEngine::get_position(Sound sound) const {
+    if (!is_valid(sound)) { return {0, 0, 0}; }
+
+    SoundData const& data = active_sounds.at(sound);
+
+    // No need to check or music first, as positions for music are always (0, 0,
+    // 0), which is the specified return value
+    return data.position;
 }
 
 bool SoundEngine::pause_sound(Sound sound) {
@@ -206,6 +217,20 @@ bool SoundEngine::resume_sound(Sound sound) {
     return true;
 }
 
+bool SoundEngine::stop_sound(Sound sound, int fade_out_ms) {
+    if (!is_valid(sound)) { return false; }
+
+    SoundData const& data = active_sounds[sound];
+
+    if (data.source->is_music()) {
+        Mix_FadeOutMusic(fade_out_ms);
+    } else {
+        Mix_FadeOutChannel(data.channel, fade_out_ms);
+    }
+
+    return true;
+}
+
 bool SoundEngine::set_volume(Sound sound, float volume) {
     if (!is_valid(sound)) { return false; }
 
@@ -223,15 +248,37 @@ bool SoundEngine::set_volume(Sound sound, float volume) {
     return true;
 }
 
+bool SoundEngine::set_position(Sound sound, float x, float y, float z) {
+    return set_position(sound, {x, y, z});
+}
+
+bool SoundEngine::set_position(Sound sound, vec3f position) {
+    if (!is_valid(sound)) { return false; }
+
+    SoundData& data = active_sounds[sound];
+
+    // Music does not support 3D spatial audio
+    if (data.source->is_music()) { return false; }
+    // Set the actual position of the effect
+    set_effect_position(data.channel, position);
+    data.position = position;
+
+    return true;
+}
+
+void SoundEngine::set_listener_position(vec3f new_position) {
+    listener_pos = new_position;
+}
+
+void SoundEngine::set_listener_position(float new_x, float new_y, float new_z) {
+    listener_pos = {new_x, new_y, new_z};
+}
+
 Sound SoundEngine::play_music(SoundSource& source,
                               int loop_count,
                               int fade_in_ms) {
-    if (fade_in_ms) {
-        Mix_FadeInMusic(source.data.music, loop_count, fade_in_ms);
-    } else {
-        Mix_PlayMusic(source.data.music, loop_count);
-    }
 
+    Mix_FadeInMusic(source.data.music, loop_count, fade_in_ms);
     Mix_VolumeMusic(
         static_cast<int>(MIX_MAX_VOLUME * source.default_params.volume));
 
@@ -240,13 +287,8 @@ Sound SoundEngine::play_music(SoundSource& source,
 
 std::pair<Sound, int>
 SoundEngine::play_effect(SoundSource& source, int loop_count, int fade_in_ms) {
-    int channel = -1;
-    if (fade_in_ms) {
-        channel =
-            Mix_FadeInChannel(-1, source.data.chunk, loop_count, fade_in_ms);
-    } else {
-        channel = Mix_PlayChannel(-1, source.data.chunk, loop_count);
-    }
+    int channel =
+        Mix_FadeInChannel(-1, source.data.chunk, loop_count, fade_in_ms);
 
     if (channel == -1) {
         AUDEO_THROW(
@@ -257,7 +299,31 @@ SoundEngine::play_effect(SoundSource& source, int loop_count, int fade_in_ms) {
     Mix_Volume(channel,
                static_cast<int>(MIX_MAX_VOLUME * source.default_params.volume));
 
+    set_effect_position(channel, source.default_params.position);
+
     return {Sound(SoundHandleGenerator::next()), channel};
+}
+
+void SoundEngine::set_effect_position(int channel, vec3f position) {
+    vec3f direction = position - listener_pos;
+    // #TODO: Make forward a parameter for the listener
+    vec3f forward = {0, 0, -1};
+    float raw_angle = angle(forward, direction);
+    // Now get the distance
+    float raw_distance = magnitude(direction);
+    // Now we adjust the angle to the left, depending on whether it is to
+    // the left or to the right of the listener. We test this by testing the
+    // sign of the cross product.
+    float d = dot(cross(direction, forward), vec3f{0, 1, 0});
+
+    if (d < 0) { raw_angle += 180.0f; }
+
+    // Maximum distance SDL provides
+    constexpr std::uint8_t max_distance = 255;
+    Mix_SetPosition(channel, static_cast<std::int16_t>(raw_angle),
+                    static_cast<std::uint8_t>(raw_distance < max_distance
+                                                  ? raw_distance
+                                                  : max_distance));
 }
 
 } // namespace audeo

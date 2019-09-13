@@ -53,7 +53,15 @@ void SoundSource::set_default_volume(float volume) {
     if (volume > 1) volume = 1;
     if (volume < 0) volume = 0;
 
-	default_params.volume = volume;
+    default_params.volume = volume;
+}
+
+void SoundSource::set_default_position(vec3f position) {
+    default_params.position = position;
+}
+
+void SoundSource::set_default_position(float x, float y, float z) {
+    default_params.position = {x, y, z};
 }
 
 void SoundSource::free_if_not_null() {
