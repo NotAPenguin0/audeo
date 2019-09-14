@@ -24,11 +24,13 @@ std::int64_t SoundHandleGenerator::cur = 0;
 struct SoundFinishedCallbacks {
     static std::unordered_map<Sound, SoundEngine::SoundData>* active_sounds;
     static std::unordered_map<int, Sound>* channel_map;
+    static SoundEngine::SoundFinishCallbackT* callback;
 
     static void remove_sound_from_map(int channel) {
         if (auto sound_it = channel_map->find(channel);
             sound_it != channel_map->end()) {
             Sound sound = sound_it->first;
+            (*callback)(sound);
             channel_map->erase(sound_it);
             active_sounds->erase(sound);
         } else {
@@ -48,6 +50,7 @@ struct SoundFinishedCallbacks {
 std::unordered_map<Sound, SoundEngine::SoundData>*
     SoundFinishedCallbacks::active_sounds = nullptr;
 std::unordered_map<int, Sound>* SoundFinishedCallbacks::channel_map = nullptr;
+SoundEngine::SoundFinishCallbackT* SoundFinishedCallbacks::callback = nullptr;
 
 float map_range(float a, float b, float c, float d, float x) {
     // https://math.stackexchange.com/questions/377169/calculating-a-value-inside-one-range-to-a-value-of-another-range
@@ -105,6 +108,7 @@ SoundEngine::SoundEngine(InitInfo const& info) {
     Mix_ChannelFinished(&SoundFinishedCallbacks::channel_callback);
     SoundFinishedCallbacks::active_sounds = &active_sounds;
     SoundFinishedCallbacks::channel_map = &channel_map;
+    SoundFinishedCallbacks::callback = &finish_callback;
 }
 
 SoundEngine::~SoundEngine() {
@@ -323,6 +327,11 @@ void SoundEngine::set_listener_forward(vec3f new_forward) {
 
 void SoundEngine::set_listener_forward(float new_x, float new_y, float new_z) {
     set_listener_forward({new_x, new_y, new_z});
+}
+
+void SoundEngine::set_sound_finish_callback(
+    SoundFinishCallbackT const& callback) {
+    finish_callback = callback;
 }
 
 Sound SoundEngine::play_music(SoundSource& source,

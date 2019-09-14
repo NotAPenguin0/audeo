@@ -7,10 +7,15 @@
 #include "vec3.hpp"
 
 #include <cstddef>
+#include <functional>
 #include <unordered_map>
 #include <utility>
 
 namespace audeo {
+
+namespace detail {
+inline void no_callback(Sound) {}
+} // namespace detail
 
 enum class OutputChannelCount { Mono = 1, Stereo = 2 };
 enum class AudioFormat {
@@ -41,6 +46,8 @@ static constexpr int loop_forever = -1;
 // class.
 class SoundEngine {
 public:
+    using SoundFinishCallbackT = std::function<void(Sound)>;
+
     // Used internally to store active sounds
     struct SoundData {
         // The source this sound is coming from
@@ -167,6 +174,13 @@ public:
     void set_listener_forward(vec3f new_forward);
     void set_listener_forward(float new_x, float new_y, float new_z);
 
+    // Callbacks and special effects
+
+    // Set a callback that is called right after the sound is stopped, and right
+    // before it is removed from the system. This means that the sound parameter
+    // is still valid inside the callback function
+    void set_sound_finish_callback(SoundFinishCallbackT const& callback);
+
 private:
     Sound play_music(SoundSource& source, int loop_count, int fade_in_ms);
     std::pair<Sound, int>
@@ -180,6 +194,8 @@ private:
     // Default constructed to (0, 0, 0)
     vec3f listener_pos;
     vec3f listener_forward = {0.0f, 0.0f, -1.0f};
+
+    SoundFinishCallbackT finish_callback = detail::no_callback;
 };
 
 } // namespace audeo

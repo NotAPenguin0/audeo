@@ -37,16 +37,21 @@ int main() {
         audeo::SoundSource music("test_samples/happy_music.mp3",
                                  audeo::AudioType::Music);
         music.set_default_volume(0.3f);
-        audeo::SoundSource bell_source("test_samples/happy_music.mp3",
+        audeo::SoundSource bell_source("test_samples/bell.wav",
                                        audeo::AudioType::Effect);
         audeo::Sound sound = engine.play_sound(music, audeo::loop_forever);
         bell_source.set_default_position(0, 0, 9.5f);
-		bell_source.set_default_distance_range_max(10.0f);
+        bell_source.set_default_distance_range_max(10.0f);
         audeo::Sound moving_bell;
 
         auto* keys = SDL_GetKeyboardState(nullptr);
 
         engine.set_listener_forward(0, 0, 1);
+
+        engine.set_sound_finish_callback([](audeo::Sound snd) {
+            std::cout << "Finished playing sound with ID " << snd.value()
+                      << "\n";
+        });
 
         while (true) {
             SDL_PumpEvents();
@@ -65,16 +70,16 @@ int main() {
                 }
                 if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_b) {
                     moving_bell =
-                        engine.play_sound(bell_source, audeo::loop_forever);
+                        engine.play_sound(bell_source);
                 }
                 if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_s) {
                     engine.stop_sound(sound);
                 }
-				if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_SPACE) {
+                if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_SPACE) {
                     static bool reverse = false;
                     engine.reverse_stereo(moving_bell, !reverse);
                     reverse = !reverse;
-				}
+                }
             }
             constexpr float angle = 0.01f;
             if (keys[SDL_SCANCODE_LEFT]) {
