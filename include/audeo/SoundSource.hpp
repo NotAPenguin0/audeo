@@ -13,7 +13,20 @@ enum class AudioType { Music, Effect };
 
 class SoundSource {
 public:
-    friend class SoundEngine;
+    using data_t = union {
+        Mix_Chunk* chunk = nullptr;
+        Mix_Music* music;
+    };
+
+    struct DefaultParameters {
+        // volume is a value between 0 and 1, where 0 means silent and 1 means
+        // max volume
+        float volume = 1.0f;
+        // Default constructed to (0, 0, 0)
+        vec3f position;
+        // Maximum distance for this sound to be heard
+        float distance_range_max = 255;
+    };
 
     SoundSource() = default;
     explicit SoundSource(std::string_view path, AudioType type);
@@ -46,24 +59,18 @@ public:
     // 255 units
     void set_default_distance_range_max(float distance);
 
+    // Used internally by the engine. You shouldn't need to call these functions
+    data_t& get_data();
+    DefaultParameters const& get_default_params() const;
+
 private:
     void free_if_not_null();
 
     bool data_is_music = false;
-    union {
-        Mix_Chunk* chunk = nullptr;
-        Mix_Music* music;
-    } data;
 
-    struct DefaultParameters {
-        // volume is a value between 0 and 1, where 0 means silent and 1 means
-        // max volume
-        float volume = 1.0f;
-        // Default constructed to (0, 0, 0)
-        vec3f position;
-        // Maximum distance for this sound to be heard
-        float distance_range_max = 255;
-    } default_params;
+    data_t data;
+
+    DefaultParameters default_params;
 };
 
 } // namespace audeo

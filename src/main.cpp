@@ -7,7 +7,13 @@
 
 // #TODO: Special effects + user defined effects
 
-// #TODO: Sound event callbacks
+// #TODO: Examples
+
+// #TODO: Refactor
+
+// #TODO: Multithread everything? (use a queue to push events onto)
+
+// #TODO: Set fade out when playing the music
 
 #define _USE_MATH_DEFINES
 #include <cmath>
@@ -29,26 +35,26 @@ int main() {
                                        SDL_WINDOWPOS_UNDEFINED, 100, 100,
                                        SDL_WINDOW_INPUT_FOCUS);
 
-        audeo::SoundEngine::InitInfo info;
+        audeo::InitInfo info;
         info.output_channels = audeo::OutputChannelCount::Stereo;
         info.effect_channels = 32;
-        audeo::SoundEngine engine(info);
+        audeo::init(info);
 
         audeo::SoundSource music("test_samples/happy_music.mp3",
                                  audeo::AudioType::Music);
         music.set_default_volume(0.3f);
         audeo::SoundSource bell_source("test_samples/bell.wav",
                                        audeo::AudioType::Effect);
-        audeo::Sound sound = engine.play_sound(music, audeo::loop_forever);
+        audeo::Sound sound = audeo::play_sound(music, audeo::loop_forever);
         bell_source.set_default_position(0, 0, 9.5f);
         bell_source.set_default_distance_range_max(10.0f);
         audeo::Sound moving_bell;
 
         auto* keys = SDL_GetKeyboardState(nullptr);
 
-        engine.set_listener_forward(0, 0, 1);
+        audeo::set_listener_forward(0, 0, 1);
 
-        engine.set_sound_finish_callback([](audeo::Sound snd) {
+        audeo::set_sound_finish_callback([](audeo::Sound snd) {
             std::cout << "Finished playing sound with ID " << snd.value()
                       << "\n";
         });
@@ -63,36 +69,35 @@ int main() {
                     return 0;
                 }
                 if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_p) {
-                    engine.pause_sound(sound);
+                    audeo::pause_sound(sound);
                 }
                 if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_r) {
-                    engine.resume_sound(sound);
+                    audeo::resume_sound(sound);
                 }
                 if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_b) {
-                    moving_bell =
-                        engine.play_sound(bell_source);
+                    moving_bell = audeo::play_sound(bell_source);
                 }
                 if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_s) {
-                    engine.stop_sound(sound);
+                    audeo::stop_sound(sound);
                 }
                 if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_SPACE) {
                     static bool reverse = false;
-                    engine.reverse_stereo(moving_bell, !reverse);
+                    audeo::reverse_stereo(moving_bell, !reverse);
                     reverse = !reverse;
                 }
             }
             constexpr float angle = 0.01f;
             if (keys[SDL_SCANCODE_LEFT]) {
                 // rotate listener forward to the left
-                audeo::vec3f fwd = engine.get_listener_forward();
+                audeo::vec3f fwd = audeo::get_listener_forward();
                 fwd = rotate_vec(fwd, angle);
-                engine.set_listener_forward(fwd);
+                audeo::set_listener_forward(fwd);
             }
             if (keys[SDL_SCANCODE_RIGHT]) {
                 // same to the right
-                audeo::vec3f fwd = engine.get_listener_forward();
+                audeo::vec3f fwd = audeo::get_listener_forward();
                 fwd = rotate_vec(fwd, -angle);
-                engine.set_listener_forward(fwd);
+                audeo::set_listener_forward(fwd);
             }
         }
 

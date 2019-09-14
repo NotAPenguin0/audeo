@@ -9,10 +9,22 @@
 #include <algorithm>
 #include <functional>
 #include <string>
+#include <unordered_map>
 
 namespace audeo {
 
 namespace {
+
+// Functions that control the engine's state
+
+std::unordered_map<Sound, SoundData> active_sounds;
+std::unordered_map<int, Sound> channel_map;
+
+// Default constructed to (0, 0, 0)
+vec3f listener_pos;
+vec3f listener_forward = {0.0f, 0.0f, -1.0f};
+
+SoundFinishCallbackT finish_callback = detail::no_callback;
 
 struct SoundHandleGenerator {
     static std::int64_t cur;
@@ -22,17 +34,13 @@ struct SoundHandleGenerator {
 std::int64_t SoundHandleGenerator::cur = 0;
 
 struct SoundFinishedCallbacks {
-    static std::unordered_map<Sound, SoundEngine::SoundData>* active_sounds;
-    static std::unordered_map<int, Sound>* channel_map;
-    static SoundEngine::SoundFinishCallbackT* callback;
-
     static void remove_sound_from_map(int channel) {
-        if (auto sound_it = channel_map->find(channel);
-            sound_it != channel_map->end()) {
+        if (auto sound_it = channel_map.find(channel);
+            sound_it != channel_map.end()) {
             Sound sound = sound_it->first;
-            (*callback)(sound);
-            channel_map->erase(sound_it);
-            active_sounds->erase(sound);
+            finish_callback(sound);
+            channel_map.erase(sound_it);
+            active_sounds.erase(sound);
         } else {
             AUDEO_THROW(audeo::exception("Invalid channel"));
         }
@@ -46,11 +54,6 @@ struct SoundFinishedCallbacks {
         remove_sound_from_map(-1);
     }
 };
-
-std::unordered_map<Sound, SoundEngine::SoundData>*
-    SoundFinishedCallbacks::active_sounds = nullptr;
-std::unordered_map<int, Sound>* SoundFinishedCallbacks::channel_map = nullptr;
-SoundEngine::SoundFinishCallbackT* SoundFinishedCallbacks::callback = nullptr;
 
 float map_range(float a, float b, float c, float d, float x) {
     // https://math.stackexchange.com/questions/377169/calculating-a-value-inside-one-range-to-a-value-of-another-range
@@ -74,12 +77,14 @@ static int to_mix_format(AudioFormat format) {
     return MIX_DEFAULT_FORMAT;
 }
 
-SoundEngine::SoundEngine(InitInfo const& info) {
+bool init(InitInfo const& info) {
     // Initialize SDL
     if (SDL_Init(SDL_INIT_AUDIO) < 0) {
         std::string error = SDL_GetError();
         AUDEO_THROW(audeo::exception(
-            ("Audeo: Unable to initliaze SDL. Reason: " + error).c_str()));
+            ("Audeo: Unable to initliaze SDL audeo. Reason: " + error).c_str()));
+		// This return can only be reached when exceptions are disabled
+        return false;
     }
     // Initialize SDL_Mixer
     if (Mix_OpenAudio(info.frequency, to_mix_format(info.format),
@@ -90,6 +95,7 @@ SoundEngine::SoundEngine(InitInfo const& info) {
         AUDEO_THROW(audeo::exception(
             ("Audeo: Unable to initialize SDL_Mixer. Reason: " + error)
                 .c_str()));
+        return false;
     }
     // Load dynamic libraries for SDL_Mixer
     const int flags =
@@ -99,6 +105,7 @@ SoundEngine::SoundEngine(InitInfo const& info) {
         AUDEO_THROW(audeo::exception(
             ("Audeo: Could not load all audio types. Reason: " + error)
                 .c_str()));
+        return false;
     }
     // Allocate channels for effects
     Mix_AllocateChannels(info.effect_channels);
@@ -106,16 +113,11 @@ SoundEngine::SoundEngine(InitInfo const& info) {
     // Initialize callbacks
     Mix_HookMusicFinished(&SoundFinishedCallbacks::music_callback);
     Mix_ChannelFinished(&SoundFinishedCallbacks::channel_callback);
-    SoundFinishedCallbacks::active_sounds = &active_sounds;
-    SoundFinishedCallbacks::channel_map = &channel_map;
-    SoundFinishedCallbacks::callback = &finish_callback;
+
+	return true;
 }
 
-SoundEngine::~SoundEngine() {
-    // Remove callbacks
-    SoundFinishedCallbacks::active_sounds = nullptr;
-    SoundFinishedCallbacks::channel_map = nullptr;
-
+void quit() {
     Mix_HookMusicFinished(nullptr);
     Mix_ChannelFinished(nullptr);
 
@@ -125,24 +127,20 @@ SoundEngine::~SoundEngine() {
     Mix_Quit();
 }
 
-std::string SoundEngine::get_audio_driver_name() const {
-    return SDL_GetCurrentAudioDriver();
-}
+std::string get_audio_driver_name() { return SDL_GetCurrentAudioDriver(); }
 
-bool SoundEngine::is_playing_music() const { return Mix_PlayingMusic(); }
+bool is_playing_music() { return Mix_PlayingMusic(); }
 
-unsigned int SoundEngine::effect_channel_count() const {
-    return Mix_AllocateChannels(-1);
-}
+unsigned int effect_channel_count() { return Mix_AllocateChannels(-1); }
 
-void SoundEngine::allocate_effect_channels(unsigned int count) {
+void allocate_effect_channels(unsigned int count) {
     if (effect_channel_count() >= count) { return; }
     Mix_AllocateChannels(count);
 }
 
-Sound SoundEngine::play_sound(SoundSource& source,
-                              int loop_count,
-                              int fade_in_ms /* = 0 */) {
+Sound play_sound(SoundSource& source,
+                 int loop_count,
+                 int fade_in_ms /* = 0 */) {
     Sound sound(-1);
 
     SoundData data;
@@ -157,7 +155,7 @@ Sound SoundEngine::play_sound(SoundSource& source,
         auto effect_data = play_effect(source, loop_count, fade_in_ms);
         sound = effect_data.first;
         data.channel = effect_data.second;
-        data.position = source.default_params.position;
+        data.position = source.get_default_params().position;
     }
     // Add the sound to the active sounds list and to the channel map
     active_sounds.try_emplace(sound, data);
@@ -166,11 +164,11 @@ Sound SoundEngine::play_sound(SoundSource& source,
     return sound;
 }
 
-bool SoundEngine::is_valid(Sound sound) const {
+bool is_valid(Sound sound) {
     return active_sounds.find(sound) != active_sounds.end();
 }
 
-float SoundEngine::get_volume(Sound sound) const {
+float get_volume(Sound sound) {
     if (!is_valid(sound)) { return -1.0f; }
 
     SoundData const& data = active_sounds.at(sound);
@@ -183,7 +181,7 @@ float SoundEngine::get_volume(Sound sound) const {
     }
 }
 
-vec3f SoundEngine::get_position(Sound sound) const {
+vec3f get_position(Sound sound) {
     if (!is_valid(sound)) { return {0, 0, 0}; }
 
     SoundData const& data = active_sounds.at(sound);
@@ -193,11 +191,11 @@ vec3f SoundEngine::get_position(Sound sound) const {
     return data.position;
 }
 
-vec3f SoundEngine::get_listener_position() const { return listener_pos; }
+vec3f get_listener_position() { return listener_pos; }
 
-vec3f SoundEngine::get_listener_forward() const { return listener_forward; }
+vec3f get_listener_forward() { return listener_forward; }
 
-bool SoundEngine::pause_sound(Sound sound) {
+bool pause_sound(Sound sound) {
     // Check if the sound is valid first
     if (!is_valid(sound)) { return false; }
 
@@ -216,7 +214,7 @@ bool SoundEngine::pause_sound(Sound sound) {
     return true;
 }
 
-bool SoundEngine::resume_sound(Sound sound) {
+bool resume_sound(Sound sound) {
     if (!is_valid(sound)) { return false; }
 
     SoundData const& data = active_sounds[sound];
@@ -230,7 +228,7 @@ bool SoundEngine::resume_sound(Sound sound) {
     return true;
 }
 
-bool SoundEngine::stop_sound(Sound sound, int fade_out_ms) {
+bool stop_sound(Sound sound, int fade_out_ms) {
     if (!is_valid(sound)) { return false; }
 
     SoundData const& data = active_sounds[sound];
@@ -244,7 +242,7 @@ bool SoundEngine::stop_sound(Sound sound, int fade_out_ms) {
     return true;
 }
 
-bool SoundEngine::set_volume(Sound sound, float volume) {
+bool set_volume(Sound sound, float volume) {
     if (!is_valid(sound)) { return false; }
 
     if (volume > 1) volume = 1;
@@ -261,11 +259,11 @@ bool SoundEngine::set_volume(Sound sound, float volume) {
     return true;
 }
 
-bool SoundEngine::set_position(Sound sound, float x, float y, float z) {
+bool set_position(Sound sound, float x, float y, float z) {
     return set_position(sound, {x, y, z});
 }
 
-bool SoundEngine::set_position(Sound sound, vec3f position) {
+bool set_position(Sound sound, vec3f position) {
     if (!is_valid(sound)) { return false; }
 
     SoundData& data = active_sounds[sound];
@@ -279,7 +277,7 @@ bool SoundEngine::set_position(Sound sound, vec3f position) {
     return true;
 }
 
-bool SoundEngine::set_distance_range_max(Sound sound, float distance) {
+bool set_distance_range_max(Sound sound, float distance) {
     if (!is_valid(sound)) { return false; }
 
     SoundData& data = active_sounds[sound];
@@ -294,7 +292,7 @@ bool SoundEngine::set_distance_range_max(Sound sound, float distance) {
     return true;
 }
 
-bool SoundEngine::reverse_stereo(Sound sound, bool reverse /* = true */) {
+bool reverse_stereo(Sound sound, bool reverse /* = true */) {
     if (!is_valid(sound)) { return false; }
 
     SoundData& data = active_sounds[sound];
@@ -305,7 +303,7 @@ bool SoundEngine::reverse_stereo(Sound sound, bool reverse /* = true */) {
     return true;
 }
 
-void SoundEngine::set_listener_position(vec3f new_position) {
+void set_listener_position(vec3f new_position) {
     listener_pos = new_position;
     // Now, update all positions for playing sounds
     for (auto const& [snd, data] : active_sounds) {
@@ -313,11 +311,11 @@ void SoundEngine::set_listener_position(vec3f new_position) {
     }
 }
 
-void SoundEngine::set_listener_position(float new_x, float new_y, float new_z) {
+void set_listener_position(float new_x, float new_y, float new_z) {
     set_listener_position({new_x, new_y, new_z});
 }
 
-void SoundEngine::set_listener_forward(vec3f new_forward) {
+void set_listener_forward(vec3f new_forward) {
     listener_forward = new_forward;
     // Now, update playing sound positions
     for (auto const& [snd, data] : active_sounds) {
@@ -325,30 +323,30 @@ void SoundEngine::set_listener_forward(vec3f new_forward) {
     }
 }
 
-void SoundEngine::set_listener_forward(float new_x, float new_y, float new_z) {
+void set_listener_forward(float new_x, float new_y, float new_z) {
     set_listener_forward({new_x, new_y, new_z});
 }
 
-void SoundEngine::set_sound_finish_callback(
-    SoundFinishCallbackT const& callback) {
+void set_sound_finish_callback(SoundFinishCallbackT const& callback) {
     finish_callback = callback;
 }
 
-Sound SoundEngine::play_music(SoundSource& source,
-                              int loop_count,
-                              int fade_in_ms) {
+Sound play_music(SoundSource& source, int loop_count, int fade_in_ms) {
 
-    Mix_FadeInMusic(source.data.music, loop_count, fade_in_ms);
+    Mix_FadeInMusic(source.get_data().music, loop_count, fade_in_ms);
     Mix_VolumeMusic(
-        static_cast<int>(MIX_MAX_VOLUME * source.default_params.volume));
+        static_cast<int>(MIX_MAX_VOLUME * source.get_default_params().volume));
 
     return Sound(SoundHandleGenerator::next());
 }
 
 std::pair<Sound, int>
-SoundEngine::play_effect(SoundSource& source, int loop_count, int fade_in_ms) {
-    int channel =
-        Mix_FadeInChannel(-1, source.data.chunk, loop_count, fade_in_ms);
+play_effect(SoundSource& source, int loop_count, int fade_in_ms) {
+
+    auto& data = source.get_data();
+    auto const& default_params = source.get_default_params();
+
+    int channel = Mix_FadeInChannel(-1, data.chunk, loop_count, fade_in_ms);
 
     if (channel == -1) {
         AUDEO_THROW(
@@ -357,17 +355,15 @@ SoundEngine::play_effect(SoundSource& source, int loop_count, int fade_in_ms) {
 
     // Set volume
     Mix_Volume(channel,
-               static_cast<int>(MIX_MAX_VOLUME * source.default_params.volume));
+               static_cast<int>(MIX_MAX_VOLUME * default_params.volume));
 
-    set_effect_position(channel, source.default_params.position,
-                        source.default_params.distance_range_max);
+    set_effect_position(channel, default_params.position,
+                        default_params.distance_range_max);
 
     return {Sound(SoundHandleGenerator::next()), channel};
 }
 
-void SoundEngine::set_effect_position(int channel,
-                                      vec3f position,
-                                      float max_distance) {
+void set_effect_position(int channel, vec3f position, float max_distance) {
     vec3f direction = position - listener_pos;
     vec3f forward = normalize(listener_forward);
     float raw_angle = angle(forward, direction);

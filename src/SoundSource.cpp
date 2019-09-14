@@ -80,4 +80,10 @@ void SoundSource::free_if_not_null() {
     }
 }
 
+SoundSource::data_t& SoundSource::get_data() { return data; }
+
+SoundSource::DefaultParameters const& SoundSource::get_default_params() const {
+    return default_params;
+}
+
 } // namespace audeo
