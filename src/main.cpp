@@ -9,8 +9,6 @@
 
 // #TODO: Examples
 
-// #TODO: Refactor
-
 // #TODO: Multithread everything? (use a queue to push events onto)
 
 // #TODO: Set fade out when playing the music
@@ -28,7 +26,7 @@ audeo::vec3f rotate_vec(audeo::vec3f vec, float angle) {
     return result;
 }
 
-int main() {
+int test_main() {
     try {
         SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS);
         auto window = SDL_CreateWindow("audeo testing", SDL_WINDOWPOS_UNDEFINED,

@@ -62,6 +62,13 @@ float map_range(float a, float b, float c, float d, float x) {
 
 } // namespace
 
+static Sound play_music(SoundSource& source, int loop_count, int fade_in_ms);
+static std::pair<Sound, int>
+play_effect(SoundSource& source, int loop_count, int fade_in_ms);
+
+static void
+set_effect_position(int channel, vec3f position, float max_distance);
+
 static int to_mix_format(AudioFormat format) {
     switch (format) {
         case AudioFormat::U8: return AUDIO_U8;
@@ -82,8 +89,9 @@ bool init(InitInfo const& info) {
     if (SDL_Init(SDL_INIT_AUDIO) < 0) {
         std::string error = SDL_GetError();
         AUDEO_THROW(audeo::exception(
-            ("Audeo: Unable to initliaze SDL audeo. Reason: " + error).c_str()));
-		// This return can only be reached when exceptions are disabled
+            ("Audeo: Unable to initliaze SDL audeo. Reason: " + error)
+                .c_str()));
+        // This return can only be reached when exceptions are disabled
         return false;
     }
     // Initialize SDL_Mixer
@@ -114,7 +122,7 @@ bool init(InitInfo const& info) {
     Mix_HookMusicFinished(&SoundFinishedCallbacks::music_callback);
     Mix_ChannelFinished(&SoundFinishedCallbacks::channel_callback);
 
-	return true;
+    return true;
 }
 
 void quit() {
@@ -162,6 +170,13 @@ Sound play_sound(SoundSource& source,
     channel_map[data.channel] = sound;
 
     return sound;
+}
+
+Sound play_sound(SoundSource& source,
+                 detail::loop_forever_t,
+                 int fade_in_ms /* = 0 */) {
+    // Play the sound with the loop_forever parameter, which is -1
+    return play_sound(source, -1, fade_in_ms);
 }
 
 bool is_valid(Sound sound) {

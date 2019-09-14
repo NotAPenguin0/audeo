@@ -41,6 +41,10 @@ endif()
 add_subdirectory("dependencies")
 add_subdirectory("include")
 add_subdirectory("src")
+# build examples if requested
+if (AUDEO_BUILD_EXAMPLES)
+	add_subdirectory("examples")
+endif(AUDEO_BUILD_EXAMPLES)
 
 add_executable(audeo
 	${AUDEO_HEADER_FILES}

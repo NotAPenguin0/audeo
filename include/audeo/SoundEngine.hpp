@@ -38,8 +38,12 @@ enum class AudioFormat {
     Default
 };
 
+namespace detail {
+struct loop_forever_t {};
+} // namespace detail
+
 // Pass this value to in a loop_count parameter to make it loop forever
-static constexpr int loop_forever = -1;
+static constexpr detail::loop_forever_t loop_forever;
 
 using SoundFinishCallbackT = std::function<void(Sound)>;
 
@@ -100,6 +104,10 @@ void allocate_effect_channels(unsigned int count);
 // a currently playing sound. Note that you can play the same sound source
 // multiple times at once, as long as it's a sound effect and not music.
 Sound play_sound(SoundSource& source, int loop_count = 0, int fade_in_ms = 0);
+
+Sound play_sound(SoundSource& source,
+                 detail::loop_forever_t,
+                 int fade_in_ms = 0);
 
 // Functions to query status of a playing sound
 
@@ -175,11 +183,6 @@ void set_listener_forward(float new_x, float new_y, float new_z);
 // is still valid inside the callback function
 void set_sound_finish_callback(SoundFinishCallbackT const& callback);
 
-Sound play_music(SoundSource& source, int loop_count, int fade_in_ms);
-std::pair<Sound, int>
-play_effect(SoundSource& source, int loop_count, int fade_in_ms);
-
-void set_effect_position(int channel, vec3f position, float max_distance);
 
 } // namespace audeo
 
