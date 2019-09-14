@@ -12,7 +12,18 @@
 
 // #TODO: Sound event callbacks
 
-// #TODO: Reverse stereo enable/disable
+#define _USE_MATH_DEFINES
+#include <cmath>
+
+audeo::vec3f rotate_vec(audeo::vec3f vec, float angle) {
+    audeo::vec3f result;
+    // We're doing 2D at the moment
+    result.y = 0;
+    result.x = cos(angle) * vec.x - sin(angle) * vec.z;
+    result.z = sin(angle) * vec.x + cos(angle) * vec.z;
+
+    return result;
+}
 
 int main() {
     try {
@@ -32,12 +43,12 @@ int main() {
         audeo::SoundSource bell_source("test_samples/happy_music.mp3",
                                        audeo::AudioType::Effect);
         audeo::Sound sound = engine.play_sound(music, audeo::loop_forever);
-
-        bell_source.set_default_position(250, 0, 0);
-
+        bell_source.set_default_position(0, 0, -180);
         audeo::Sound moving_bell;
 
         auto* keys = SDL_GetKeyboardState(nullptr);
+
+        engine.set_listener_forward(0, 0, -1);
 
         while (true) {
             SDL_PumpEvents();
@@ -61,26 +72,24 @@ int main() {
                 if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_s) {
                     engine.stop_sound(sound);
                 }
+				if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_SPACE) {
+                    static bool reverse = false;
+                    engine.reverse_stereo(moving_bell, !reverse);
+                    reverse = !reverse;
+				}
             }
+            constexpr float angle = 0.01f;
             if (keys[SDL_SCANCODE_LEFT]) {
-                audeo::vec3f pos = engine.get_position(moving_bell);
-                pos.x -= 0.001f;
-                engine.set_position(moving_bell, pos);
+                // rotate listener forward to the left
+                audeo::vec3f fwd = engine.get_listener_forward();
+                fwd = rotate_vec(fwd, angle);
+                engine.set_listener_forward(fwd);
             }
             if (keys[SDL_SCANCODE_RIGHT]) {
-                audeo::vec3f pos = engine.get_position(moving_bell);
-                pos.x += 0.001f;
-                engine.set_position(moving_bell, pos);
-            }
-            if (keys[SDL_SCANCODE_UP]) {
-                audeo::vec3f pos = engine.get_position(moving_bell);
-                pos.z -= 0.001f;
-                engine.set_position(moving_bell, pos);
-            }
-            if (keys[SDL_SCANCODE_DOWN]) {
-                audeo::vec3f pos = engine.get_position(moving_bell);
-                pos.z += 0.001f;
-                engine.set_position(moving_bell, pos);
+                // same to the right
+                audeo::vec3f fwd = engine.get_listener_forward();
+                fwd = rotate_vec(fwd, -angle);
+                engine.set_listener_forward(fwd);
             }
         }
 

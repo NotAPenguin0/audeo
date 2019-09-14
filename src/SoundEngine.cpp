@@ -184,6 +184,10 @@ vec3f SoundEngine::get_position(Sound sound) const {
     return data.position;
 }
 
+vec3f SoundEngine::get_listener_position() const { return listener_pos; }
+
+vec3f SoundEngine::get_listener_forward() const { return listener_forward; }
+
 bool SoundEngine::pause_sound(Sound sound) {
     // Check if the sound is valid first
     if (!is_valid(sound)) { return false; }
@@ -266,12 +270,39 @@ bool SoundEngine::set_position(Sound sound, vec3f position) {
     return true;
 }
 
+bool SoundEngine::reverse_stereo(Sound sound, bool reverse /* = true */) {
+    if (!is_valid(sound)) { return false; }
+
+    SoundData& data = active_sounds[sound];
+
+    // If the second parameter is zero (false), the effect will unregister.
+    Mix_SetReverseStereo(data.channel, reverse);
+
+    return true;
+}
+
 void SoundEngine::set_listener_position(vec3f new_position) {
     listener_pos = new_position;
+    // Now, update all positions for playing sounds
+    for (auto const& [snd, data] : active_sounds) {
+        set_position(snd, data.position);
+    }
 }
 
 void SoundEngine::set_listener_position(float new_x, float new_y, float new_z) {
-    listener_pos = {new_x, new_y, new_z};
+    set_listener_position({new_x, new_y, new_z});
+}
+
+void SoundEngine::set_listener_forward(vec3f new_forward) {
+    listener_forward = new_forward;
+    // Now, update playing sound positions
+    for (auto const& [snd, data] : active_sounds) {
+        set_position(snd, data.position);
+    }
+}
+
+void SoundEngine::set_listener_forward(float new_x, float new_y, float new_z) {
+    set_listener_forward({new_x, new_y, new_z});
 }
 
 Sound SoundEngine::play_music(SoundSource& source,
@@ -306,8 +337,7 @@ SoundEngine::play_effect(SoundSource& source, int loop_count, int fade_in_ms) {
 
 void SoundEngine::set_effect_position(int channel, vec3f position) {
     vec3f direction = position - listener_pos;
-    // #TODO: Make forward a parameter for the listener
-    vec3f forward = {0, 0, -1};
+    vec3f forward = normalize(listener_forward);
     float raw_angle = angle(forward, direction);
     // Now get the distance
     float raw_distance = magnitude(direction);

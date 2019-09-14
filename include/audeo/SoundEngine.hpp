@@ -112,6 +112,15 @@ public:
     // return (0, 0, 0)
     vec3f get_position(Sound sound) const;
 
+    // Returns the listener position. If no listener position was set, this will
+    // be (0, 0, 0)
+    vec3f get_listener_position() const;
+
+    // Returns the forward direction vector of the listener. If no listener
+    // forward direction was set, this will default to be (0, 0, -1) (which is
+    // forward in OpenGL)
+    vec3f get_listener_forward() const;
+
     // Functions to affect currently playing sounds. Note that all these
     // functions return a bool indicating success or failure.
 
@@ -136,11 +145,21 @@ public:
     bool set_position(Sound sound, vec3f position);
     bool set_position(Sound sound, float x, float y, float z);
 
-    // Functionality to control positional audio.
+    // Swaps stereo left and right. This function only has effect when
+    // initialized with stereo audio. To reverse this effect, call this function
+    // with false as the second argument
+    bool reverse_stereo(Sound sound, bool reverse = true);
+
+    // Functionality to control the positional audio.
 
     // Sets the audio listener position to specified position
     void set_listener_position(vec3f new_position);
     void set_listener_position(float new_x, float new_y, float new_z);
+
+    // Set the forward direction for the listener to the new forward direction
+    // vector
+    void set_listener_forward(vec3f new_forward);
+    void set_listener_forward(float new_x, float new_y, float new_z);
 
 private:
     Sound play_music(SoundSource& source, int loop_count, int fade_in_ms);
@@ -154,6 +173,7 @@ private:
 
     // Default constructed to (0, 0, 0)
     vec3f listener_pos;
+    vec3f listener_forward = {0.0f, 0.0f, -1.0f};
 };
 
 } // namespace audeo
