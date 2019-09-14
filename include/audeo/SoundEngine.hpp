@@ -50,6 +50,9 @@ public:
         // The current position of the sound. Only used when the sound is an
         // effect
         vec3f position;
+        // The maximum distance this sound can be heard from. Only used when the
+        // sound is an effect
+        float max_distance;
     };
 
     // Initialization data for the sound engine.
@@ -145,6 +148,9 @@ public:
     bool set_position(Sound sound, vec3f position);
     bool set_position(Sound sound, float x, float y, float z);
 
+    // Set the maximum distance this sound can be heard from
+    bool set_distance_range_max(Sound sound, float distance);
+
     // Swaps stereo left and right. This function only has effect when
     // initialized with stereo audio. To reverse this effect, call this function
     // with false as the second argument
@@ -166,7 +172,7 @@ private:
     std::pair<Sound, int>
     play_effect(SoundSource& source, int loop_count, int fade_in_ms);
 
-    void set_effect_position(int channel, vec3f position);
+    void set_effect_position(int channel, vec3f position, float max_distance);
 
     std::unordered_map<Sound, SoundData> active_sounds;
     std::unordered_map<int, Sound> channel_map;

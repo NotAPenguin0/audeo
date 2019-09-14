@@ -42,6 +42,10 @@ public:
     void set_default_position(vec3f position);
     void set_default_position(float x, float y, float z);
 
+    // Set the maximum distance this sound can be heard from. This defaults to
+    // 255 units
+    void set_default_distance_range_max(float distance);
+
 private:
     void free_if_not_null();
 
@@ -57,6 +61,8 @@ private:
         float volume = 1.0f;
         // Default constructed to (0, 0, 0)
         vec3f position;
+        // Maximum distance for this sound to be heard
+        float distance_range_max = 255;
     } default_params;
 };
 

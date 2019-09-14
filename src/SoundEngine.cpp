@@ -49,6 +49,11 @@ std::unordered_map<Sound, SoundEngine::SoundData>*
     SoundFinishedCallbacks::active_sounds = nullptr;
 std::unordered_map<int, Sound>* SoundFinishedCallbacks::channel_map = nullptr;
 
+float map_range(float a, float b, float c, float d, float x) {
+    // https://math.stackexchange.com/questions/377169/calculating-a-value-inside-one-range-to-a-value-of-another-range
+    return (x - a) * ((d - c) / (b - a)) + c;
+}
+
 } // namespace
 
 static int to_mix_format(AudioFormat format) {
@@ -264,8 +269,23 @@ bool SoundEngine::set_position(Sound sound, vec3f position) {
     // Music does not support 3D spatial audio
     if (data.source->is_music()) { return false; }
     // Set the actual position of the effect
-    set_effect_position(data.channel, position);
+    set_effect_position(data.channel, position, data.max_distance);
     data.position = position;
+
+    return true;
+}
+
+bool SoundEngine::set_distance_range_max(Sound sound, float distance) {
+    if (!is_valid(sound)) { return false; }
+
+    SoundData& data = active_sounds[sound];
+
+    // Music does not support 3D spatial audio
+    if (data.source->is_music()) { return false; }
+
+    data.max_distance = distance;
+    // Update positional sound data
+    set_effect_position(data.channel, data.position, data.max_distance);
 
     return true;
 }
@@ -330,12 +350,15 @@ SoundEngine::play_effect(SoundSource& source, int loop_count, int fade_in_ms) {
     Mix_Volume(channel,
                static_cast<int>(MIX_MAX_VOLUME * source.default_params.volume));
 
-    set_effect_position(channel, source.default_params.position);
+    set_effect_position(channel, source.default_params.position,
+                        source.default_params.distance_range_max);
 
     return {Sound(SoundHandleGenerator::next()), channel};
 }
 
-void SoundEngine::set_effect_position(int channel, vec3f position) {
+void SoundEngine::set_effect_position(int channel,
+                                      vec3f position,
+                                      float max_distance) {
     vec3f direction = position - listener_pos;
     vec3f forward = normalize(listener_forward);
     float raw_angle = angle(forward, direction);
@@ -349,11 +372,14 @@ void SoundEngine::set_effect_position(int channel, vec3f position) {
     if (d < 0) { raw_angle += 180.0f; }
 
     // Maximum distance SDL provides
-    constexpr std::uint8_t max_distance = 255;
+    constexpr std::uint8_t sdl_max_distance = 255;
+    // Map our own max distance to SDL's max_distance
+
+    std::uint8_t mapped_distance = static_cast<std::int8_t>(
+        map_range(0, max_distance, 0, sdl_max_distance, raw_distance));
+
     Mix_SetPosition(channel, static_cast<std::int16_t>(raw_angle),
-                    static_cast<std::uint8_t>(raw_distance < max_distance
-                                                  ? raw_distance
-                                                  : max_distance));
+                    mapped_distance);
 }
 
 } // namespace audeo

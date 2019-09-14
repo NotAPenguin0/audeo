@@ -5,9 +5,6 @@
 #define SDL_MAIN_HANDLED
 #include <SDL.h>
 
-// #TODO: Allow setting max distance (maybe per sound). The mixer will then map
-// this to the SDL_Mixer sound range (0-255)
-
 // #TODO: Special effects + user defined effects
 
 // #TODO: Sound event callbacks
@@ -43,12 +40,13 @@ int main() {
         audeo::SoundSource bell_source("test_samples/happy_music.mp3",
                                        audeo::AudioType::Effect);
         audeo::Sound sound = engine.play_sound(music, audeo::loop_forever);
-        bell_source.set_default_position(0, 0, -180);
+        bell_source.set_default_position(0, 0, 9.5f);
+		bell_source.set_default_distance_range_max(10.0f);
         audeo::Sound moving_bell;
 
         auto* keys = SDL_GetKeyboardState(nullptr);
 
-        engine.set_listener_forward(0, 0, -1);
+        engine.set_listener_forward(0, 0, 1);
 
         while (true) {
             SDL_PumpEvents();

@@ -64,6 +64,10 @@ void SoundSource::set_default_position(float x, float y, float z) {
     default_params.position = {x, y, z};
 }
 
+void SoundSource::set_default_distance_range_max(float distance) {
+    default_params.distance_range_max = distance;
+}
+
 void SoundSource::free_if_not_null() {
     // Since both union elements are pointers it does not matter which one we
     // check, as both will be null when one is null anyway
