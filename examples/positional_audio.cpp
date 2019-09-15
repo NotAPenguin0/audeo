@@ -32,7 +32,9 @@ void positional_audio() {
     // This will map the our own distance range for the sound (0-100 units) to
     // the default distance range (0-255 units). It is advised that you tweak
     // this value to adjust it to the 'scale' of your application (if 100 units
-    // is ~1 meter in your app you will need a larger distance range).
+    // is ~1 meter in your app you will need a larger distance range). Another
+    // way of looking at this value is the maximum distance in units
+    // this sound can be heard from.
     audeo::set_distance_range_max(sound, 100);
 
     // The sound listener is at position (0, 0, 0) by default, facing in
