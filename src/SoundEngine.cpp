@@ -1,4 +1,5 @@
 #include "audeo/SoundEngine.hpp"
+#include "audeo/effects.hpp"
 
 // SDL headers
 #define SDL_MAIN_HANDLED
@@ -48,6 +49,9 @@ struct SoundFinishedCallbacks {
 
     static void channel_callback(int channel) {
         remove_sound_from_map(channel);
+        // Unregister all effects from this channel, so that they won't apply to
+        // the next sound that plays here
+        Mix_UnregisterAllEffects(channel);
     }
     static void music_callback() {
         // -1 is the music channel in the channel map
@@ -307,17 +311,6 @@ bool set_distance_range_max(Sound sound, float distance) {
     return true;
 }
 
-bool reverse_stereo(Sound sound, bool reverse /* = true */) {
-    if (!is_valid(sound)) { return false; }
-
-    SoundData& data = active_sounds[sound];
-
-    // If the second parameter is zero (false), the effect will unregister.
-    Mix_SetReverseStereo(data.channel, reverse);
-
-    return true;
-}
-
 void set_listener_position(vec3f new_position) {
     listener_pos = new_position;
     // Now, update all positions for playing sounds
@@ -342,11 +335,35 @@ void set_listener_forward(float new_x, float new_y, float new_z) {
     set_listener_forward({new_x, new_y, new_z});
 }
 
+bool reverse_stereo(Sound sound, bool reverse /* = true */) {
+    if (!is_valid(sound)) { return false; }
+
+    SoundData& data = active_sounds[sound];
+
+    // If the second parameter is zero (false), the effect will unregister.
+    Mix_SetReverseStereo(data.channel, reverse);
+
+    return true;
+}
+
+bool add_effect(Sound sound, Effect eff) {
+    if (!is_valid(sound)) { return false; }
+
+    SoundData& data = active_sounds[sound];
+	
+	// Temporary always register echo
+	Mix_RegisterEffect(data.channel, echo_callback, nullptr, nullptr);
+
+	return true;
+}
+
 void set_sound_finish_callback(SoundFinishCallbackT const& callback) {
     finish_callback = callback;
 }
 
-Sound play_music(SoundSource& source, int loop_count, int fade_in_ms) {
+// Internal functions
+
+static Sound play_music(SoundSource& source, int loop_count, int fade_in_ms) {
 
     Mix_FadeInMusic(source.get_data().music, loop_count, fade_in_ms);
     Mix_VolumeMusic(
@@ -355,7 +372,7 @@ Sound play_music(SoundSource& source, int loop_count, int fade_in_ms) {
     return Sound(SoundHandleGenerator::next());
 }
 
-std::pair<Sound, int>
+static std::pair<Sound, int>
 play_effect(SoundSource& source, int loop_count, int fade_in_ms) {
 
     auto& data = source.get_data();
@@ -378,7 +395,7 @@ play_effect(SoundSource& source, int loop_count, int fade_in_ms) {
     return {Sound(SoundHandleGenerator::next()), channel};
 }
 
-void set_effect_position(int channel, vec3f position, float max_distance) {
+static void set_effect_position(int channel, vec3f position, float max_distance) {
     vec3f direction = position - listener_pos;
     vec3f forward = normalize(listener_forward);
     float raw_angle = angle(forward, direction);

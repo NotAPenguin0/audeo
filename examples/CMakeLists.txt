@@ -1,5 +1,6 @@
 set(AUDEO_SOURCE_FILES
 	${AUDEO_SOURCE_FILES}
+	"${CMAKE_CURRENT_SOURCE_DIR}/example_effects.cpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/examples_main.cpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/basic_playback.cpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/control_sounds.cpp"

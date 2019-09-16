@@ -5,6 +5,7 @@
 void basic_playback();
 void control_sounds();
 void positional_audio();
+void effects();
 
 int main() {
     // Initialize audeo.
@@ -25,7 +26,9 @@ int main() {
 
 //	control_sounds();
 
-	positional_audio();
+//	positional_audio();
+
+	effects();
 
     // Quit audeo
     audeo::quit();

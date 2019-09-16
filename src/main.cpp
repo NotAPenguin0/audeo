@@ -7,7 +7,7 @@
 
 // #TODO: Special effects + user defined effects
 
-// #TODO: Examples
+// #TODO: Example for special effects
 
 // #TODO: Multithread everything? (use a queue to push events onto)
 

@@ -38,6 +38,15 @@ enum class AudioFormat {
     Default
 };
 
+enum class Effect {
+    // For the echo effect to be fully heard at the end of your sample, it is
+    // recommended that you add some silence to the end of it so that it will
+    // actually be heard properly. If you don't do this, the effect will be cut
+    // off at the end
+    Echo,
+    None
+};
+
 namespace detail {
 struct loop_forever_t {};
 } // namespace detail
@@ -69,7 +78,7 @@ struct InitInfo {
     // The amount of output channels.
     OutputChannelCount output_channels = OutputChannelCount::Stereo;
     // The size of a chunk, in bytes. Default is 4096 bytes
-    unsigned int chunk_size = 4096;
+    unsigned int chunk_size = 8192;
     // The format the audio samples will be in
     AudioFormat format = AudioFormat::Default;
     // The amount of effect channels to allocate. This effectively controls
@@ -160,11 +169,6 @@ bool set_position(Sound sound, float x, float y, float z);
 // Set the maximum distance this sound can be heard from
 bool set_distance_range_max(Sound sound, float distance);
 
-// Swaps stereo left and right. This function only has effect when
-// initialized with stereo audio. To reverse this effect, call this function
-// with false as the second argument
-bool reverse_stereo(Sound sound, bool reverse = true);
-
 // Functionality to control the positional audio.
 
 // Sets the audio listener position to specified position
@@ -178,10 +182,18 @@ void set_listener_forward(float new_x, float new_y, float new_z);
 
 // Callbacks and special effects
 
+// Swaps stereo left and right. This function only has effect when
+// initialized with stereo audio. To reverse this effect, call this function
+// with false as the second argument
+bool reverse_stereo(Sound sound, bool reverse = true);
+
+bool add_effect(Sound sound, Effect effect);
+
 // Set a callback that is called right after the sound is stopped, and right
 // before it is removed from the system. This means that the sound parameter
 // is still valid inside the callback function
 void set_sound_finish_callback(SoundFinishCallbackT const& callback);
+
 
 
 } // namespace audeo
