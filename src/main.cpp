@@ -5,13 +5,12 @@
 #define SDL_MAIN_HANDLED
 #include <SDL.h>
 
-// #TODO: Special effects + user defined effects
-
-// #TODO: Example for special effects
 
 // #TODO: Multithread everything? (use a queue to push events onto)
 
 // #TODO: Set fade out when playing the music
+
+// #TODO: Make SoundSource a handle just like Sound
 
 #define _USE_MATH_DEFINES
 #include <cmath>
@@ -38,14 +37,14 @@ int test_main() {
         info.effect_channels = 32;
         audeo::init(info);
 
-        audeo::SoundSource music("test_samples/happy_music.mp3",
+        audeo::SoundSource music = audeo::load_source("test_samples/happy_music.mp3",
                                  audeo::AudioType::Music);
-        music.set_default_volume(0.3f);
-        audeo::SoundSource bell_source("test_samples/bell.wav",
+        audeo::set_default_volume(music, 0.3f);
+        audeo::SoundSource bell_source = audeo::load_source("test_samples/bell.wav",
                                        audeo::AudioType::Effect);
         audeo::Sound sound = audeo::play_sound(music, audeo::loop_forever);
-        bell_source.set_default_position(0, 0, 9.5f);
-        bell_source.set_default_distance_range_max(10.0f);
+        audeo::set_default_position(bell_source, 0, 0, 9.5f);
+        audeo::set_default_distance_range_max(bell_source, 10.0f);
         audeo::Sound moving_bell;
 
         auto* keys = SDL_GetKeyboardState(nullptr);

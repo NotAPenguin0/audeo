@@ -19,7 +19,7 @@ void positional_audio() {
     // that we can apply positional audio functionality to it. Note that this is
     // *not* recommended as a way to do positional music. It is just done here
     // for demonstration purposes so we can have a long lasting sound 'effect'
-    audeo::SoundSource source("test_samples/happy_music.mp3",
+    audeo::SoundSource source = audeo::load_source("test_samples/happy_music.mp3",
                               audeo::AudioType::Effect);
 
     // You can control the default parameters a sound will get when playing from

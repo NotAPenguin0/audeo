@@ -8,20 +8,18 @@ namespace audeo {
 
 class Sound {
 public:
-	Sound();
-    Sound(std::int64_t handle);
+    Sound() : handle(-1) {}
+    Sound(std::int64_t handle) : handle(handle) {}
     Sound(Sound const&) = default;
     Sound(Sound&&) = default;
 
     Sound& operator=(Sound const&) = default;
     Sound& operator=(Sound&&) = default;
 
-    std::int64_t value() const;
+    std::int64_t value() const { return handle; }
 
     bool operator==(Sound const& rhs) const { return handle == rhs.handle; }
     bool operator!=(Sound const& rhs) const { return handle != rhs.handle; }
-
-    operator std::int64_t() const { return handle; }
 
 private:
     std::int64_t handle;

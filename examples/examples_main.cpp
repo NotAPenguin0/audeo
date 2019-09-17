@@ -7,6 +7,8 @@ void control_sounds();
 void positional_audio();
 void effects();
 
+int test_main();
+
 int main() {
     // Initialize audeo.
 
@@ -28,7 +30,9 @@ int main() {
 
 //	positional_audio();
 
-	effects();
+//	effects();
+
+	test_main();
 
     // Quit audeo
     audeo::quit();

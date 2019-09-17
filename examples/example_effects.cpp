@@ -1,7 +1,7 @@
 #include "audeo/audeo.hpp"
 
 void effects() {
-    audeo::SoundSource source("test_samples/bell.wav",
+    audeo::SoundSource source = audeo::load_source("test_samples/bell.wav",
                               audeo::AudioType::Effect);
 
     audeo::Sound sound = audeo::play_sound(source, audeo::loop_forever);

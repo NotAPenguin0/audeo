@@ -8,6 +8,8 @@
 
 #include <cstddef>
 #include <functional>
+#include <optional>
+#include <string_view>
 #include <utility>
 
 namespace audeo {
@@ -47,19 +49,17 @@ enum class Effect {
     None
 };
 
-namespace detail {
 struct loop_forever_t {};
-} // namespace detail
 
 // Pass this value to in a loop_count parameter to make it loop forever
-static constexpr detail::loop_forever_t loop_forever;
+static constexpr loop_forever_t loop_forever;
 
 using SoundFinishCallbackT = std::function<void(Sound)>;
 
 // Used internally to store active sounds
 struct SoundData {
     // The source this sound is coming from
-    SoundSource* source;
+    SoundSource source;
     // The channel this sound is playing on. -1 for music
     int channel;
     // The current position of the sound. Only used when the sound is an
@@ -106,32 +106,59 @@ unsigned int effect_channel_count();
 // of channels has already been allocated, this function has no effect
 void allocate_effect_channels(unsigned int count);
 
+// Functions that control sound sources
+
+// Loads a sound source into memory. This returns a handle that you can pass to
+// the library to do stuff with your sound source
+SoundSource load_source(std::string_view path, AudioType type);
+
+// Returns true if the sound was loaded as a music sound
+bool source_is_music(SoundSource source);
+
+// The volume parameter is a value between 0 and 1, where 0 means silent and
+// 1 means max volume. Any value outside this range will be clamped to fit
+// the range
+bool set_default_volume(SoundSource source, float volume);
+
+// Used for 3D spatial audio. This is a position in world space and will be
+// used together with the listener position to create 3D sounds
+bool set_default_position(SoundSource source, float x, float y, float z);
+bool set_default_position(SoundSource source, vec3f position);
+
+// Set the maximum distance this sound can be heard from. This defaults to
+// 255 units
+bool set_default_distance_range_max(SoundSource source, float distance);
+
+// Functions that control sounds
+
 // Play a sound source. loop_count is the amount of times we loop the sound.
 // fade_in_ms is the amount of ms to fade in. Leave this at 0 (the default
 // value) to play the sound without fading in.
 // Returns an instance of audeo::Sound, which is used as a handle to control
 // a currently playing sound. Note that you can play the same sound source
 // multiple times at once, as long as it's a sound effect and not music.
-Sound play_sound(SoundSource& source, int loop_count = 0, int fade_in_ms = 0);
-
-Sound play_sound(SoundSource& source,
-                 detail::loop_forever_t,
+Sound play_sound(SoundSource source,
+                 int loop_count = 0,
                  int fade_in_ms = 0);
+
+Sound play_sound(SoundSource source, loop_forever_t, int fade_in_ms = 0);
 
 // Functions to query status of a playing sound
 
 // Checks if a sound is valid
 bool is_valid(Sound sound);
 
+// Checks if a sound source is valid
+bool is_valid(SoundSource source);
+
 // Returns the volume of a playing sound. This is a value between 0 and 1.
-// It is safe to call this function on paused sounds. If the sound is not
-// valid, this function will return -1
-float get_volume(Sound sound);
+// It is safe to call this function on paused sounds.
+std::optional<float> get_volume(Sound sound);
 
 // Returns the position of a playing sound. For music, this position will
 // always be (0, 0, 0). For an invalid sound, this function will also
 // return (0, 0, 0)
-vec3f get_position(Sound sound);
+std::optional<vec3f> get_position(Sound sound);
 
 // Returns the listener position. If no listener position was set, this will
 // be (0, 0, 0)
@@ -192,9 +219,7 @@ bool add_effect(Sound sound, Effect effect);
 // Set a callback that is called right after the sound is stopped, and right
 // before it is removed from the system. This means that the sound parameter
 // is still valid inside the callback function
-void set_sound_finish_callback(SoundFinishCallbackT const& callback);
-
-
+void set_sound_finish_callback(SoundFinishCallbackT callback);
 
 } // namespace audeo
 

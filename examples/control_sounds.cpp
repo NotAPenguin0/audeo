@@ -31,8 +31,8 @@ void control_sounds() {
     SDL_Window* window = init_sdl();
 
     // Load our music source
-    audeo::SoundSource source("test_samples/happy_music.mp3",
-                              audeo::AudioType::Music);
+    audeo::SoundSource source = audeo::load_source(
+        "test_samples/happy_music.mp3", audeo::AudioType::Music);
 
     // Start playing our music. Since we will be controlling it in this
     // application, we will have to store the sound handle that is returned by

@@ -7,12 +7,17 @@ void basic_playback() {
     // Load two sound sources into memory. One for background music, and one for
     // an effect. Music will be streamed from the file, while an effect is fully
     // loaded into memory
+    //
+    // audeo::load_source() returns a handle (audeo::SoundSource) to an
+    // audeo sound source that is loaded. You can free this source by calling
+    // audeo::free_source(), or audeo::free_unused_sources(), which will free
+    // all sound sources that are not playing
 
-    audeo::SoundSource music_source("test_samples/happy_music.mp3",
-                                    audeo::AudioType::Music);
+    audeo::SoundSource music_source = audeo::load_source(
+        "test_samples/happy_music.mp3", audeo::AudioType::Music);
 
-    audeo::SoundSource effect_source("test_samples/bell.wav",
-                                     audeo::AudioType::Effect);
+    audeo::SoundSource effect_source = audeo::load_source(
+        "test_samples/bell.wav", audeo::AudioType::Effect);
 
     // Now we start the music by calling audeo::play_sound(). We will loop the
     // music once (the second parameter). This function will return an instance
