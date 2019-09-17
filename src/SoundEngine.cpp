@@ -158,6 +158,10 @@ bool init(InitInfo const& info) {
 }
 
 void quit() {
+    // Halt all sounds, then free them
+    for (auto const [snd, data] : active_sounds) { stop_sound(snd); }
+    free_unused_sources();
+
     Mix_HookMusicFinished(nullptr);
     Mix_ChannelFinished(nullptr);
 
