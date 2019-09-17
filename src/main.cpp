@@ -47,7 +47,6 @@ int test_main() {
         audeo::set_default_distance_range_max(bell_source, 10.0f);
         audeo::Sound moving_bell;
 
-
         auto* keys = SDL_GetKeyboardState(nullptr);
 
         audeo::set_listener_forward(0, 0, 1);
@@ -62,6 +61,7 @@ int test_main() {
             SDL_Event e;
             while (SDL_PollEvent(&e)) {
                 if (e.type == SDL_QUIT) {
+                    audeo::quit();
                     SDL_DestroyWindow(window);
                     SDL_Quit();
                     return 0;
@@ -77,11 +77,6 @@ int test_main() {
                 }
                 if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_s) {
                     audeo::stop_sound(sound);
-                }
-                if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_SPACE) {
-                    static bool reverse = false;
-                    audeo::reverse_stereo(moving_bell, !reverse);
-                    reverse = !reverse;
                 }
             }
             constexpr float angle = 0.01f;
@@ -99,6 +94,7 @@ int test_main() {
             }
         }
 
+        audeo::quit();
         SDL_DestroyWindow(window);
         SDL_Quit();
     } catch (audeo::exception const& e) { std::cout << e.what(); }
