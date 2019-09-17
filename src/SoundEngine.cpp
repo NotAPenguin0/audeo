@@ -178,7 +178,7 @@ void allocate_effect_channels(unsigned int count) {
     Mix_AllocateChannels(count);
 }
 
-SoundSource load_source(std::string_view path, AudioType type) {
+[[nodiscard]] SoundSource load_source(std::string_view path, AudioType type) {
     SoundSource source(SourceHandleGenerator::next());
     SoundSourceData source_data;
     switch (type) {
@@ -205,6 +205,45 @@ SoundSource load_source(std::string_view path, AudioType type) {
     sound_sources[source] = source_data;
 
     return source;
+}
+
+bool free_source(SoundSource source) {
+    if (!is_valid(source)) { return false; }
+    if (is_playing(source)) { return false; }
+
+    SoundSourceData& data = sound_sources[source];
+    if (data.is_music) {
+        Mix_FreeMusic(data.data.music);
+    } else {
+        Mix_FreeChunk(data.data.chunk);
+    }
+
+    // Remove from sound source map
+    sound_sources.erase(source);
+
+    return true;
+}
+
+std::size_t free_unused_sources() {
+    // Create list of sources that have to be freed
+    std::vector<SoundSource> to_erase;
+    for (auto const& [source, data] : sound_sources) {
+        if (!is_playing(source)) { to_erase.push_back(source); }
+    }
+
+    // Free all sources that have to be freed
+    for (auto src : to_erase) { free_source(src); }
+
+    return to_erase.size();
+}
+
+bool is_playing(SoundSource source) {
+    if (!is_valid(source)) { return false; }
+
+    for (auto const& [snd, data] : active_sounds) {
+        if (data.source == source) { return true; }
+    }
+    return false;
 }
 
 bool source_is_music(SoundSource source) {

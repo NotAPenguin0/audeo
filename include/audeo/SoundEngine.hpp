@@ -110,7 +110,19 @@ void allocate_effect_channels(unsigned int count);
 
 // Loads a sound source into memory. This returns a handle that you can pass to
 // the library to do stuff with your sound source
-SoundSource load_source(std::string_view path, AudioType type);
+[[nodiscard]] SoundSource load_source(std::string_view path, AudioType type);
+
+// This will free a sound source if it is not currently playing. Returns the
+// success of the function
+bool free_source(SoundSource source);
+
+// Frees all sources that are not currently playing. Returns the amount of
+// sources freed
+std::size_t free_unused_sources();
+
+// Returns whether a sound source currently has a playing Sound instance
+// attached to it
+bool is_playing(SoundSource source);
 
 // Returns true if the sound was loaded as a music sound
 bool source_is_music(SoundSource source);
@@ -137,9 +149,7 @@ bool set_default_distance_range_max(SoundSource source, float distance);
 // Returns an instance of audeo::Sound, which is used as a handle to control
 // a currently playing sound. Note that you can play the same sound source
 // multiple times at once, as long as it's a sound effect and not music.
-Sound play_sound(SoundSource source,
-                 int loop_count = 0,
-                 int fade_in_ms = 0);
+Sound play_sound(SoundSource source, int loop_count = 0, int fade_in_ms = 0);
 
 Sound play_sound(SoundSource source, loop_forever_t, int fade_in_ms = 0);
 
