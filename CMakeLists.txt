@@ -17,14 +17,14 @@ if (NOT CMAKE_BUILD_TYPE)
 	message(STATUS "Audeo: Build type not specified: Using Release by default.")
 endif(NOT CMAKE_BUILD_TYPE)
 
-option(BUILD_EXPORT ON)
+option(AUDEO_BUILD_EXPORT ON)
 
 add_definitions(
 	-DMBCS
 	${AUDEO_COMPILE_FLAGS}
 )
 
-if (BUILD_EXPORT)
+if (AUDEO_BUILD_EXPORT)
 	add_definitions(-DAUDEO_EXPORT)
 endif()
 
@@ -55,6 +55,10 @@ option(AUDEO_BUILD_EXAMPLES
 if (AUDEO_BUILD_EXAMPLES)
 	add_subdirectory("examples")
 endif(AUDEO_BUILD_EXAMPLES)
+
+if (NOT AUDEO_BUILD_EXPORT)
+	set(AUDEO_SOURCE_FILES "")
+endif()
 
 add_library(audeo SHARED
 	${AUDEO_HEADER_FILES}
