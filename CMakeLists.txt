@@ -50,7 +50,7 @@ if (AUDEO_BUILD_EXAMPLES)
 	add_subdirectory("examples")
 endif(AUDEO_BUILD_EXAMPLES)
 
-add_executable(audeo
+add_library(audeo STATIC
 	${AUDEO_HEADER_FILES}
 	${AUDEO_SOURCE_FILES}
 )
