@@ -4,6 +4,7 @@
 #include <SDL_mixer.h>
 #include <string_view>
 
+#include "export_import.hpp"
 #include "exception.hpp"
 #include "vec3.hpp"
 

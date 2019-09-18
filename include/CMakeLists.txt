@@ -2,6 +2,7 @@ set(AUDEO_HEADER_FILES
 	${AUDEO_HEADER_FILES}
 	"${CMAKE_CURRENT_SOURCE_DIR}/audeo/audeo.hpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/audeo/effects.hpp"
+	"${CMAKE_CURRENT_SOURCE_DIR}/audeo/export_import.hpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/audeo/exception.hpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/audeo/Sound.hpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/audeo/SoundEngine.hpp"

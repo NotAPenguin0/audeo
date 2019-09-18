@@ -4,6 +4,7 @@
 #include "Sound.hpp"
 #include "SoundSource.hpp"
 #include "exception.hpp"
+#include "export_import.hpp"
 #include "vec3.hpp"
 
 #include <cstddef>
@@ -15,7 +16,7 @@
 namespace audeo {
 
 namespace detail {
-inline void no_callback(Sound) {}
+AUDEO_API inline void no_callback(Sound) {}
 } // namespace detail
 
 enum class OutputChannelCount { Mono = 1, Stereo = 2 };
@@ -86,60 +87,63 @@ struct InitInfo {
     unsigned int effect_channels = 16;
 };
 
-bool init(InitInfo const& info);
+AUDEO_API bool init(InitInfo const& info);
 
-void quit();
+AUDEO_API void quit();
 
 // Returns the name of the currently active audio driver
-std::string get_audio_driver_name();
+AUDEO_API std::string get_audio_driver_name();
 
 // These functions check/control the status of the engine
 
 // Return true if the engine is playing a music track
-bool is_playing_music();
+AUDEO_API bool is_playing_music();
 
 // Returns the amount of effect channels currently allocated. This
 // corresponds to the amount of audio samples that can be played at once
-unsigned int effect_channel_count();
+AUDEO_API unsigned int effect_channel_count();
 
 // Allocates extra effect channels to reach count channels. If this amount
 // of channels has already been allocated, this function has no effect
-void allocate_effect_channels(unsigned int count);
+AUDEO_API void allocate_effect_channels(unsigned int count);
 
 // Functions that control sound sources
 
 // Loads a sound source into memory. This returns a handle that you can pass to
 // the library to do stuff with your sound source
-[[nodiscard]] SoundSource load_source(std::string_view path, AudioType type);
+[[nodiscard]] AUDEO_API SoundSource load_source(std::string_view path,
+                                               AudioType type);
 
 // This will free a sound source if it is not currently playing. Returns the
 // success of the function
-bool free_source(SoundSource source);
+AUDEO_API bool free_source(SoundSource source);
 
 // Frees all sources that are not currently playing. Returns the amount of
 // sources freed
-std::size_t free_unused_sources();
+AUDEO_API std::size_t free_unused_sources();
 
 // Returns whether a sound source currently has a playing Sound instance
 // attached to it
-bool is_playing(SoundSource source);
+AUDEO_API bool is_playing(SoundSource source);
 
 // Returns true if the sound was loaded as a music sound
-bool source_is_music(SoundSource source);
+AUDEO_API bool source_is_music(SoundSource source);
 
 // The volume parameter is a value between 0 and 1, where 0 means silent and
 // 1 means max volume. Any value outside this range will be clamped to fit
 // the range
-bool set_default_volume(SoundSource source, float volume);
+AUDEO_API bool set_default_volume(SoundSource source, float volume);
 
 // Used for 3D spatial audio. This is a position in world space and will be
 // used together with the listener position to create 3D sounds
-bool set_default_position(SoundSource source, float x, float y, float z);
-bool set_default_position(SoundSource source, vec3f position);
+AUDEO_API bool
+set_default_position(SoundSource source, float x, float y, float z);
+AUDEO_API bool set_default_position(SoundSource source, vec3f position);
 
 // Set the maximum distance this sound can be heard from. This defaults to
 // 255 units
-bool set_default_distance_range_max(SoundSource source, float distance);
+AUDEO_API bool set_default_distance_range_max(SoundSource source,
+                                              float distance);
 
 // Functions that control sounds
 
@@ -149,87 +153,91 @@ bool set_default_distance_range_max(SoundSource source, float distance);
 // Returns an instance of audeo::Sound, which is used as a handle to control
 // a currently playing sound. Note that you can play the same sound source
 // multiple times at once, as long as it's a sound effect and not music.
-Sound play_sound(SoundSource source, int loop_count = 0, int fade_in_ms = 0);
+AUDEO_API Sound play_sound(SoundSource source,
+                           int loop_count = 0,
+                           int fade_in_ms = 0);
 
-Sound play_sound(SoundSource source, loop_forever_t, int fade_in_ms = 0);
+AUDEO_API Sound play_sound(SoundSource source,
+                           loop_forever_t,
+                           int fade_in_ms = 0);
 
 // Functions to query status of a playing sound
 
 // Checks if a sound is valid
-bool is_valid(Sound sound);
+AUDEO_API bool is_valid(Sound sound);
 
 // Checks if a sound source is valid
-bool is_valid(SoundSource source);
+AUDEO_API bool is_valid(SoundSource source);
 
 // Returns the volume of a playing sound. This is a value between 0 and 1.
 // It is safe to call this function on paused sounds.
-std::optional<float> get_volume(Sound sound);
+AUDEO_API std::optional<float> get_volume(Sound sound);
 
 // Returns the position of a playing sound. For music, this position will
 // always be (0, 0, 0). For an invalid sound, this function will also
 // return (0, 0, 0)
-std::optional<vec3f> get_position(Sound sound);
+AUDEO_API std::optional<vec3f> get_position(Sound sound);
 
 // Returns the listener position. If no listener position was set, this will
 // be (0, 0, 0)
-vec3f get_listener_position();
+AUDEO_API vec3f get_listener_position();
 
 // Returns the forward direction vector of the listener. If no listener
 // forward direction was set, this will default to be (0, 0, -1) (which is
 // forward in OpenGL)
-vec3f get_listener_forward();
+AUDEO_API vec3f get_listener_forward();
 
 // Functions to affect currently playing sounds. Note that all these
 // functions return a bool indicating success or failure.
 
 // Pauses a currently playing sound. Calling this on a paused sound has no
 // effect
-bool pause_sound(Sound sound);
+AUDEO_API bool pause_sound(Sound sound);
 
 // Resumes a paused sound. Calling this on a sound that isn't paused has no
 // effect
-bool resume_sound(Sound sound);
+AUDEO_API bool resume_sound(Sound sound);
 
 // Completely stops a sound. After this call, the sound handle will become
 // invalid, as the sound will no longer be playing
-bool stop_sound(Sound sound, int fade_out_ms = 0);
+AUDEO_API bool stop_sound(Sound sound, int fade_out_ms = 0);
 
 // Set volume for a sound. This volume value is an value between 0 and 1,
 // where 0 means complete silence, and 1 means max volume. Any value outside
 // this range will be clamped to be inside it
-bool set_volume(Sound sound, float volume);
+AUDEO_API bool set_volume(Sound sound, float volume);
 
 // Set the 3D position of the sound
-bool set_position(Sound sound, vec3f position);
-bool set_position(Sound sound, float x, float y, float z);
+AUDEO_API bool set_position(Sound sound, vec3f position);
+AUDEO_API bool set_position(Sound sound, float x, float y, float z);
 
 // Set the maximum distance this sound can be heard from
-bool set_distance_range_max(Sound sound, float distance);
+AUDEO_API bool set_distance_range_max(Sound sound, float distance);
 
 // Functionality to control the positional audio.
 
 // Sets the audio listener position to specified position
-void set_listener_position(vec3f new_position);
-void set_listener_position(float new_x, float new_y, float new_z);
+AUDEO_API void set_listener_position(vec3f new_position);
+AUDEO_API void set_listener_position(float new_x, float new_y, float new_z);
 
 // Set the forward direction for the listener to the new forward direction
 // vector
-void set_listener_forward(vec3f new_forward);
-void set_listener_forward(float new_x, float new_y, float new_z);
+AUDEO_API void set_listener_forward(vec3f new_forward);
+AUDEO_API void set_listener_forward(float new_x, float new_y, float new_z);
 
 // Callbacks and special effects
 
 // Swaps stereo left and right. This function only has effect when
 // initialized with stereo audio. To reverse this effect, call this function
 // with false as the second argument
-bool reverse_stereo(Sound sound, bool reverse = true);
+AUDEO_API bool reverse_stereo(Sound sound, bool reverse = true);
 
-bool add_effect(Sound sound, Effect effect);
+AUDEO_API bool add_effect(Sound sound, Effect effect);
 
 // Set a callback that is called right after the sound is stopped, and right
 // before it is removed from the system. This means that the sound parameter
 // is still valid inside the callback function
-void set_sound_finish_callback(SoundFinishCallbackT callback);
+AUDEO_API void set_sound_finish_callback(SoundFinishCallbackT callback);
 
 } // namespace audeo
 

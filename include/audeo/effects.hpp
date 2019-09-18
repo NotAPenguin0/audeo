@@ -5,7 +5,8 @@
 
 namespace audeo {
 
-void echo_callback(int channel, void* stream, int length, void* user_data);
+AUDEO_API void
+echo_callback(int channel, void* stream, int length, void* user_data);
 
 } // namespace audeo
 

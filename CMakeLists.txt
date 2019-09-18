@@ -19,6 +19,7 @@ endif(NOT CMAKE_BUILD_TYPE)
 
 add_definitions(
 	-DMBCS
+	-DAUDEO_EXPORT
 	${AUDEO_COMPILE_FLAGS}
 )
 
@@ -50,7 +51,7 @@ if (AUDEO_BUILD_EXAMPLES)
 	add_subdirectory("examples")
 endif(AUDEO_BUILD_EXAMPLES)
 
-add_library(audeo STATIC
+add_library(audeo SHARED
 	${AUDEO_HEADER_FILES}
 	${AUDEO_SOURCE_FILES}
 )
