@@ -30,7 +30,7 @@ void basic_playback() {
 
     // We can also play the effect source the same way. The loop_count parameter
     // defaults to 0, which means the effect will only be played once
-    audeo::Sound effect = audeo::play_sound(music_source);
+    audeo::Sound effect = audeo::play_sound(effect_source);
 
     // Idle loop so that we don't quit the application before the music stops.
     while (audeo::is_playing_music()) {}
