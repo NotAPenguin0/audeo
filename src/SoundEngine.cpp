@@ -552,6 +552,9 @@ set_effect_position(int channel, vec3f position, float max_distance) {
     float raw_angle = angle(forward, direction);
     // Now get the distance
     float raw_distance = magnitude(direction);
+    // Make sure the distance is set to max_distance once we are too far away to
+    // hear it to not break the map_range() function
+    if (raw_distance > max_distance) raw_distance = max_distance;
     // Now we adjust the angle to the left, depending on whether it is to
     // the left or to the right of the listener. We test this by testing the
     // sign of the cross product.
