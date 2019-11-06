@@ -31,6 +31,10 @@ More examples can be found in the `examples` directory.
 
 No, I didn't. `audeo` is latin. See also https://latin-dictionary.net/definition/5532/audeo-audere-ausus
 
+## Building
+
+Audeo comes with a `CMakeLists.txt` file. All you have to do is make sure you have the SDL and SDL_Mixer libraries on your system.
+
 ## Contributing
 
 Any contributions, PR's, issues or questions are always welcome.
