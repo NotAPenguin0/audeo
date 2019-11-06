@@ -87,8 +87,8 @@ struct InitInfo {
     unsigned int effect_channels = 16;
 };
 
-AUDEO_API bool init(InitInfo const& info);
-
+AUDEO_API bool init(InitInfo const& info = InitInfo {});
+ 
 AUDEO_API void quit();
 
 // Returns the name of the currently active audio driver
