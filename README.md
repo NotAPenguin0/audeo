@@ -10,6 +10,11 @@ The purpose of audeo is to make playing and controlling 3D (but also 2D) sounds 
 #include <audeo/audeo.hpp>
 
 int main() {
+    
+    if (!audeo::init()) {
+        return -1;
+    }
+    
     audeo::SoundSource music_source = audeo::load_source(
         "test_samples/happy_music.mp3", audeo::AudioType::Music);
 
@@ -20,6 +25,8 @@ int main() {
     audeo::Sound effect = audeo::play_sound(effect_source);
 
     while (audeo::is_playing_music()) {}
+    
+    audeo::quit();
     
     return 0;
 }
