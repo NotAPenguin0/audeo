@@ -40,7 +40,7 @@ No, I didn't. `audeo` is latin. See also https://latin-dictionary.net/definition
 
 ## Building
 
-Audeo comes with a `CMakeLists.txt` file. All you have to do is make sure you have the SDL and SDL_Mixer libraries on your system.
+Audeo comes with a `CMakeLists.txt` file. All you have to do is make sure you have the SDL and SDL_Mixer libraries on your system. For Windows x64, these are already provided and no extra steps are needed.
 
 ## Questions
 
