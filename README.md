@@ -42,6 +42,10 @@ No, I didn't. `audeo` is latin. See also https://latin-dictionary.net/definition
 
 Audeo comes with a `CMakeLists.txt` file. All you have to do is make sure you have the SDL and SDL_Mixer libraries on your system.
 
+## Questions
+
+For any questions about the library or how to set it up, you're always welcome to open an issue, or shoot me a message on discord: `NotAPenguin#8928`, and I'll try to respond as soon as I can.
+
 ## Contributing
 
 Any contributions, PR's, issues or questions are always welcome.
