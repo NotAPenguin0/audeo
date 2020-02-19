@@ -35,7 +35,7 @@ if (MSVC)
    	set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /W3 /GL /Od /Oi /GR /Gy /EHsc /permissive- /Za")
 else()
 	if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-       		set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
+       		#set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libstdc++")
    	endif()
 endif()
 
@@ -73,6 +73,7 @@ get_filename_component(AUDEO_DEP_DIR
 	ABSOLUTE
 )
 
+if(WIN32)
 message(${AUDEO_DEP_DIR})
 
 set(AUDEO_LINK_LIBRARIES 
@@ -80,6 +81,11 @@ set(AUDEO_LINK_LIBRARIES
 	"${AUDEO_DEP_DIR}/sdl/bin/SDL2main.lib"
 	"${AUDEO_DEP_DIR}/sdl_mixer/lib/x64/SDL2_mixer.lib"
 )
-
+else()
+	set(AUDEO_LINK_LIBRARIES
+			SDL2
+			SDL2_mixer
+			)
+endif()
 
 target_link_libraries(audeo ${AUDEO_LINK_LIBRARIES})
