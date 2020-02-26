@@ -66,7 +66,7 @@ struct SoundFinishedCallbacks {
     static void remove_sound_from_map(int channel) {
         if (auto sound_it = channel_map.find(channel);
             sound_it != channel_map.end()) {
-            Sound sound = sound_it->first;
+            Sound sound = sound_it->second;
             finish_callback(sound);
             channel_map.erase(sound_it);
             active_sounds.erase(sound);
