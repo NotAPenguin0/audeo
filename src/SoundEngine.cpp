@@ -7,7 +7,6 @@
 #include <SDL_audio.h>
 #include <SDL_mixer.h>
 
-#include <algorithm>
 #include <functional>
 #include <string>
 #include <unordered_map>
@@ -50,22 +49,19 @@ vec3f listener_forward = {0.0f, 0.0f, -1.0f};
 
 SoundFinishCallbackT finish_callback = detail::no_callback;
 
-template<typename T>
-struct HandleGenerator {
+template<typename T> struct HandleGenerator {
     static std::int64_t cur;
     static std::int64_t next() { return cur++; }
 };
 
-template<typename T>
-std::int64_t HandleGenerator<T>::cur = 0;
+template<typename T> std::int64_t HandleGenerator<T>::cur = 0;
 
 using SoundHandleGenerator = HandleGenerator<Sound>;
 using SourceHandleGenerator = HandleGenerator<SoundSource>;
 
 struct SoundFinishedCallbacks {
     static void remove_sound_from_map(int channel) {
-        if (auto sound_it = channel_map.find(channel);
-            sound_it != channel_map.end()) {
+        if (auto sound_it = channel_map.find(channel); sound_it != channel_map.end()) {
             Sound sound = sound_it->second;
             finish_callback(sound);
             channel_map.erase(sound_it);
@@ -95,11 +91,9 @@ float map_range(float a, float b, float c, float d, float x) {
 } // namespace
 
 static Sound play_music(SoundSource source, int loop_count, int fade_in_ms);
-static std::pair<Sound, int>
-play_effect(SoundSource source, int loop_count, int fade_in_ms);
+static std::pair<Sound, int> play_effect(SoundSource source, int loop_count, int fade_in_ms);
 
-static void
-set_effect_position(int channel, vec3f position, float max_distance);
+static void set_effect_position(int channel, vec3f position, float max_distance);
 
 static int to_mix_format(AudioFormat format) {
     switch (format) {
@@ -120,31 +114,26 @@ bool init(InitInfo const& info) {
     // Initialize SDL
     if (SDL_Init(SDL_INIT_AUDIO) < 0) {
         std::string error = SDL_GetError();
-        AUDEO_THROW(audeo::exception(
-            ("Audeo: Unable to initliaze SDL audeo. Reason: " + error)
-                .c_str()));
+        AUDEO_THROW(
+            audeo::exception(("Audeo: Unable to initliaze SDL audeo. Reason: " + error).c_str()));
         // This return can only be reached when exceptions are disabled
         return false;
     }
     // Initialize SDL_Mixer
     if (Mix_OpenAudio(info.frequency, to_mix_format(info.format),
-                      static_cast<int>(info.output_channels),
-                      info.chunk_size) == -1) {
+                      static_cast<int>(info.output_channels), info.chunk_size) == -1) {
         // Mix_GetError() is the same as SDL_GetError()
         std::string error = Mix_GetError();
-        AUDEO_THROW(audeo::exception(
-            ("Audeo: Unable to initialize SDL_Mixer. Reason: " + error)
-                .c_str()));
+        AUDEO_THROW(
+            audeo::exception(("Audeo: Unable to initialize SDL_Mixer. Reason: " + error).c_str()));
         return false;
     }
     // Load dynamic libraries for SDL_Mixer
-    const int flags =
-        MIX_INIT_FLAC | MIX_INIT_MOD | MIX_INIT_OGG | MIX_INIT_MP3;
+    const int flags = MIX_INIT_FLAC | MIX_INIT_MOD | MIX_INIT_OGG | MIX_INIT_MP3;
     if ((flags & Mix_Init(flags)) != flags) {
         std::string error = Mix_GetError();
-        AUDEO_THROW(audeo::exception(
-            ("Audeo: Could not load all audio types. Reason: " + error)
-                .c_str()));
+        AUDEO_THROW(
+            audeo::exception(("Audeo: Could not load all audio types. Reason: " + error).c_str()));
         return false;
     }
     // Allocate channels for effects
@@ -178,7 +167,9 @@ bool is_playing_music() { return Mix_PlayingMusic(); }
 unsigned int effect_channel_count() { return Mix_AllocateChannels(-1); }
 
 void allocate_effect_channels(unsigned int count) {
-    if (effect_channel_count() >= count) { return; }
+    if (effect_channel_count() >= count) {
+        return;
+    }
     Mix_AllocateChannels(count);
 }
 
@@ -190,9 +181,7 @@ void allocate_effect_channels(unsigned int count) {
             source_data.is_music = true;
             source_data.data.music = Mix_LoadMUS(path.data());
             break;
-        case AudioType::Effect:
-            source_data.data.chunk = Mix_LoadWAV(path.data());
-            break;
+        case AudioType::Effect: source_data.data.chunk = Mix_LoadWAV(path.data()); break;
     }
 
     // Check for errors
@@ -212,8 +201,12 @@ void allocate_effect_channels(unsigned int count) {
 }
 
 bool free_source(SoundSource source) {
-    if (!is_valid(source)) { return false; }
-    if (is_playing(source)) { return false; }
+    if (!is_valid(source)) {
+        return false;
+    }
+    if (is_playing(source)) {
+        return false;
+    }
 
     SoundSourceData& data = sound_sources[source];
     if (data.is_music) {
@@ -232,7 +225,9 @@ std::size_t free_unused_sources() {
     // Create list of sources that have to be freed
     std::vector<SoundSource> to_erase;
     for (auto const& [source, data] : sound_sources) {
-        if (!is_playing(source)) { to_erase.push_back(source); }
+        if (!is_playing(source)) {
+            to_erase.push_back(source);
+        }
     }
 
     // Free all sources that have to be freed
@@ -242,27 +237,37 @@ std::size_t free_unused_sources() {
 }
 
 bool is_playing(SoundSource source) {
-    if (!is_valid(source)) { return false; }
+    if (!is_valid(source)) {
+        return false;
+    }
 
     for (auto const& [snd, data] : active_sounds) {
-        if (data.source == source) { return true; }
+        if (data.source == source) {
+            return true;
+        }
     }
     return false;
 }
 
 bool source_is_music(SoundSource source) {
-    if (!is_valid(source)) { return false; }
+    if (!is_valid(source)) {
+        return false;
+    }
 
     SoundSourceData const& data = sound_sources[source];
     return data.is_music;
 }
 
 bool set_default_volume(SoundSource source, float volume) {
-    if (!is_valid(source)) { return false; }
+    if (!is_valid(source)) {
+        return false;
+    }
 
     // Clamp volume parameter
-    if (volume > 1) volume = 1;
-    if (volume < 0) volume = 0;
+    if (volume > 1)
+        volume = 1;
+    if (volume < 0)
+        volume = 0;
 
     SoundSourceData& data = sound_sources[source];
     data.default_params.volume = volume;
@@ -275,7 +280,9 @@ bool set_default_position(SoundSource source, float x, float y, float z) {
 }
 
 bool set_default_position(SoundSource source, vec3f position) {
-    if (!is_valid(source)) { return false; }
+    if (!is_valid(source)) {
+        return false;
+    }
 
     SoundSourceData& data = sound_sources[source];
     data.default_params.position = position;
@@ -284,7 +291,9 @@ bool set_default_position(SoundSource source, vec3f position) {
 }
 
 bool set_default_distance_range_max(SoundSource source, float distance) {
-    if (!is_valid(source)) { return false; }
+    if (!is_valid(source)) {
+        return false;
+    }
 
     SoundSourceData& data = sound_sources[source];
     data.default_params.distance_range_max = distance;
@@ -296,7 +305,9 @@ Sound play_sound(SoundSource source, int loop_count, int fade_in_ms /* = 0 */) {
 
     Sound sound(-1);
 
-    if (!is_valid(source)) { return sound; }
+    if (!is_valid(source)) {
+        return sound;
+    }
 
     SoundData data;
     data.source = source;
@@ -326,29 +337,28 @@ Sound play_sound(SoundSource source, loop_forever_t, int fade_in_ms /* = 0 */) {
     return play_sound(source, -1, fade_in_ms);
 }
 
-bool is_valid(Sound sound) {
-    return active_sounds.find(sound) != active_sounds.end();
-}
+bool is_valid(Sound sound) { return active_sounds.find(sound) != active_sounds.end(); }
 
-bool is_valid(SoundSource source) {
-    return sound_sources.find(source) != sound_sources.end();
-}
+bool is_valid(SoundSource source) { return sound_sources.find(source) != sound_sources.end(); }
 
 std::optional<float> get_volume(Sound sound) {
-    if (!is_valid(sound)) { return std::nullopt; }
+    if (!is_valid(sound)) {
+        return std::nullopt;
+    }
 
     SoundData const& data = active_sounds.at(sound);
 
     if (source_is_music(data.source)) {
         return static_cast<float>(Mix_VolumeMusic(-1)) / MIX_MAX_VOLUME;
     } else {
-        return static_cast<float>(Mix_Volume(data.channel, -1)) /
-               MIX_MAX_VOLUME;
+        return static_cast<float>(Mix_Volume(data.channel, -1)) / MIX_MAX_VOLUME;
     }
 }
 
 std::optional<vec3f> get_position(Sound sound) {
-    if (!is_valid(sound)) { return std::nullopt; }
+    if (!is_valid(sound)) {
+        return std::nullopt;
+    }
 
     SoundData const& data = active_sounds.at(sound);
 
@@ -363,7 +373,9 @@ vec3f get_listener_forward() { return listener_forward; }
 
 bool pause_sound(Sound sound) {
     // Check if the sound is valid first
-    if (!is_valid(sound)) { return false; }
+    if (!is_valid(sound)) {
+        return false;
+    }
 
     // Find the sound data
     SoundData const& data = active_sounds[sound];
@@ -381,7 +393,9 @@ bool pause_sound(Sound sound) {
 }
 
 bool resume_sound(Sound sound) {
-    if (!is_valid(sound)) { return false; }
+    if (!is_valid(sound)) {
+        return false;
+    }
 
     SoundData const& data = active_sounds[sound];
 
@@ -395,7 +409,9 @@ bool resume_sound(Sound sound) {
 }
 
 bool stop_sound(Sound sound, int fade_out_ms) {
-    if (!is_valid(sound)) { return false; }
+    if (!is_valid(sound)) {
+        return false;
+    }
 
     SoundData const& data = active_sounds[sound];
 
@@ -409,10 +425,14 @@ bool stop_sound(Sound sound, int fade_out_ms) {
 }
 
 bool set_volume(Sound sound, float volume) {
-    if (!is_valid(sound)) { return false; }
+    if (!is_valid(sound)) {
+        return false;
+    }
 
-    if (volume > 1) volume = 1;
-    if (volume < 0) volume = 0;
+    if (volume > 1)
+        volume = 1;
+    if (volume < 0)
+        volume = 0;
 
     SoundData const& data = active_sounds[sound];
 
@@ -425,17 +445,19 @@ bool set_volume(Sound sound, float volume) {
     return true;
 }
 
-bool set_position(Sound sound, float x, float y, float z) {
-    return set_position(sound, {x, y, z});
-}
+bool set_position(Sound sound, float x, float y, float z) { return set_position(sound, {x, y, z}); }
 
 bool set_position(Sound sound, vec3f position) {
-    if (!is_valid(sound)) { return false; }
+    if (!is_valid(sound)) {
+        return false;
+    }
 
     SoundData& data = active_sounds[sound];
 
     // Music does not support 3D spatial audio
-    if (source_is_music(data.source)) { return false; }
+    if (source_is_music(data.source)) {
+        return false;
+    }
     // Set the actual position of the effect
     set_effect_position(data.channel, position, data.max_distance);
     data.position = position;
@@ -444,12 +466,16 @@ bool set_position(Sound sound, vec3f position) {
 }
 
 bool set_distance_range_max(Sound sound, float distance) {
-    if (!is_valid(sound)) { return false; }
+    if (!is_valid(sound)) {
+        return false;
+    }
 
     SoundData& data = active_sounds[sound];
 
     // Music does not support 3D spatial audio
-    if (source_is_music(data.source)) { return false; }
+    if (source_is_music(data.source)) {
+        return false;
+    }
 
     data.max_distance = distance;
     // Update positional sound data
@@ -461,9 +487,7 @@ bool set_distance_range_max(Sound sound, float distance) {
 void set_listener_position(vec3f new_position) {
     listener_pos = new_position;
     // Now, update all positions for playing sounds
-    for (auto const& [snd, data] : active_sounds) {
-        set_position(snd, data.position);
-    }
+    for (auto const& [snd, data] : active_sounds) { set_position(snd, data.position); }
 }
 
 void set_listener_position(float new_x, float new_y, float new_z) {
@@ -473,9 +497,7 @@ void set_listener_position(float new_x, float new_y, float new_z) {
 void set_listener_forward(vec3f new_forward) {
     listener_forward = new_forward;
     // Now, update playing sound positions
-    for (auto const& [snd, data] : active_sounds) {
-        set_position(snd, data.position);
-    }
+    for (auto const& [snd, data] : active_sounds) { set_position(snd, data.position); }
 }
 
 void set_listener_forward(float new_x, float new_y, float new_z) {
@@ -483,7 +505,9 @@ void set_listener_forward(float new_x, float new_y, float new_z) {
 }
 
 bool reverse_stereo(Sound sound, bool reverse /* = true */) {
-    if (!is_valid(sound)) { return false; }
+    if (!is_valid(sound)) {
+        return false;
+    }
 
     SoundData& data = active_sounds[sound];
 
@@ -494,7 +518,9 @@ bool reverse_stereo(Sound sound, bool reverse /* = true */) {
 }
 
 bool add_effect(Sound sound, Effect eff) {
-    if (!is_valid(sound)) { return false; }
+    if (!is_valid(sound)) {
+        return false;
+    }
 
     SoundData& data = active_sounds[sound];
 
@@ -515,38 +541,36 @@ static Sound play_music(SoundSource source, int loop_count, int fade_in_ms) {
     SoundSourceData const& data = sound_sources[source];
 
     Mix_FadeInMusic(data.data.music, loop_count, fade_in_ms);
-    Mix_VolumeMusic(
-        static_cast<int>(MIX_MAX_VOLUME * data.default_params.volume));
+    Mix_VolumeMusic(static_cast<int>(MIX_MAX_VOLUME * data.default_params.volume));
 
     return Sound(SoundHandleGenerator::next());
 }
 
-static std::pair<Sound, int>
-play_effect(SoundSource source, int loop_count, int fade_in_ms) {
+static std::pair<Sound, int> play_effect(SoundSource source, int loop_count, int fade_in_ms) {
 
     SoundSourceData const& data = sound_sources[source];
     auto const& default_params = data.default_params;
 
-    int channel =
-        Mix_FadeInChannel(-1, data.data.chunk, loop_count, fade_in_ms);
+    int channel;
+    if (fade_in_ms == 0) {
+        channel = Mix_PlayChannel(-1, data.data.chunk, loop_count);
+    } else {
+        channel = Mix_FadeInChannel(-1, data.data.chunk, loop_count, fade_in_ms);
+    }
 
     if (channel == -1) {
-        AUDEO_THROW(
-            audeo::exception("No channel available to play sound effect"));
+        AUDEO_THROW(audeo::exception("No channel available to play sound effect"));
     }
 
     // Set volume
-    Mix_Volume(channel,
-               static_cast<int>(MIX_MAX_VOLUME * default_params.volume));
+    Mix_Volume(channel, static_cast<int>(MIX_MAX_VOLUME * default_params.volume));
 
-    set_effect_position(channel, default_params.position,
-                        default_params.distance_range_max);
+    set_effect_position(channel, default_params.position, default_params.distance_range_max);
 
     return {Sound(SoundHandleGenerator::next()), channel};
 }
 
-static void
-set_effect_position(int channel, vec3f position, float max_distance) {
+static void set_effect_position(int channel, vec3f position, float max_distance) {
     vec3f direction = position - listener_pos;
     vec3f forward = normalize(listener_forward);
     float raw_angle = angle(forward, direction);
@@ -554,23 +578,25 @@ set_effect_position(int channel, vec3f position, float max_distance) {
     float raw_distance = magnitude(direction);
     // Make sure the distance is set to max_distance once we are too far away to
     // hear it to not break the map_range() function
-    if (raw_distance > max_distance) raw_distance = max_distance;
+    if (raw_distance > max_distance)
+        raw_distance = max_distance;
     // Now we adjust the angle to the left, depending on whether it is to
     // the left or to the right of the listener. We test this by testing the
     // sign of the cross product.
     float d = dot(cross(direction, forward), vec3f{0, 1, 0});
 
-    if (d < 0) { raw_angle += 180.0f; }
+    if (d < 0) {
+        raw_angle += 180.0f;
+    }
 
     // Maximum distance SDL provides
     constexpr std::uint8_t sdl_max_distance = 255;
     // Map our own max distance to SDL's max_distance
 
-    std::uint8_t mapped_distance = static_cast<std::int8_t>(
-        map_range(0, max_distance, 0, sdl_max_distance, raw_distance));
+    std::uint8_t mapped_distance =
+        static_cast<std::int8_t>(map_range(0, max_distance, 0, sdl_max_distance, raw_distance));
 
-    Mix_SetPosition(channel, static_cast<std::int16_t>(raw_angle),
-                    mapped_distance);
+    Mix_SetPosition(channel, static_cast<std::int16_t>(raw_angle), mapped_distance);
 }
 
 } // namespace audeo
